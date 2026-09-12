@@ -1,0 +1,126 @@
+\documentclass[9pt,a4paper]{article}
+
+\usepackage[margin=0.45in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{listings}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage[T1]{fontenc}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+\setlength{\columnsep}{0.22in}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small United International University}
+\rhead{\small \thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\scriptsize,
+    columns=fullflexible,
+    keepspaces=true,
+    tabsize=4,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    framerule=0.2pt,
+    aboveskip=2pt,
+    belowskip=3pt
+}
+
+\begin{document}
+
+\begin{multicols}{2}
+
+\section{Python}
+\input{notes/python_syntax.tex}
+
+\section{Modular Arithmetic}
+\input{notes/modular_arithmetic.tex}
+
+\section{Series}
+\input{notes/series.tex}
+
+\section{Binary Search}
+
+\subsection{First True: FFFFTTTT}
+\lstinputlisting{code/02_binary_search/first_true.py}
+
+\subsection{Last True: TTTTFFFF}
+\lstinputlisting{code/02_binary_search/last_true.py}
+
+\section{Number Theory}
+
+\input{notes/number_theory_formulas.tex}
+
+\subsection{GCD / LCM}
+\lstinputlisting{code/03_number_theory/gcd.py}
+
+\subsection{Prime Factorization}
+\lstinputlisting{code/03_number_theory/factorization.py}
+
+\subsection{All Divisors}
+\lstinputlisting{code/03_number_theory/divisors.py}
+
+\subsection{Divisor Count Sieve}
+\lstinputlisting{code/03_number_theory/divisor_count_sieve.py}
+
+\subsection{Sieve of Eratosthenes}
+\lstinputlisting{code/03_number_theory/sieve.py}
+
+\subsection{Bytearray Sieve}
+\lstinputlisting{code/03_number_theory/bytearray_sieve.py}
+
+\subsection{SPF Factorization}
+\lstinputlisting{code/03_number_theory/spf_factorization.py}
+
+\subsection{Goldbach}
+\lstinputlisting{code/03_number_theory/goldbach.py}
+
+\subsection{Binary Exponentiation}
+\lstinputlisting{code/03_number_theory/binary_exponentiation.py}
+
+\subsection{Miller--Rabin}
+\lstinputlisting{code/03_number_theory/miller_rabin.py}
+
+\subsection{Factorials / nCr}
+\lstinputlisting{code/03_number_theory/factorial_ncr.py}
+
+\section{Geometry}
+
+\input{notes/geometry.tex}
+
+\subsection{Polygon Area}
+\lstinputlisting{code/04_geometry/polygon_area.py}
+
+\section{Graphs}
+
+\subsection{DFS Maximum Depth}
+\lstinputlisting{code/05_graph/dfs_max_depth.py}
+
+\subsection{Tree Traversals}
+\lstinputlisting{code/05_graph/tree_traversal.py}
+
+\subsection{Dijkstra}
+\lstinputlisting{code/05_graph/dijkstra.py}
+
+\subsection{Topological Sort}
+\lstinputlisting{code/05_graph/topological_sort.py}
+
+\subsection{DSU}
+\lstinputlisting{code/05_graph/dsu.py}
+
+\section{Data Structures}
+
+\subsection{Fenwick Tree}
+\lstinputlisting{code/06_data_structures/fenwick_tree.py}
+
+\subsection{Segment Tree (Minimum)}
+\lstinputlisting{code/06_data_structures/segment_tree_min.py}
+
+\end{multicols}
+
+\end{document}

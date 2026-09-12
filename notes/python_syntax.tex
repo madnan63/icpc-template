@@ -1,0 +1,19 @@
+\subsection{Python Syntax / Formatting}
+\begin{lstlisting}
+x = int("101101", 2)           # binary string -> int
+s = format(x, f"0{width}b")    # binary with leading zeros
+print(f"{value:.2f}")          # 2 decimal places
+\end{lstlisting}
+
+\subsection{Fast Input}
+\lstinputlisting{code/01_python/fast_io.py}
+
+\subsection{Sorting defaultdict}
+\begin{lstlisting}
+d = defaultdict(d.default_factory, sorted(d.items()))
+
+d = defaultdict(
+    d.default_factory,
+    sorted(d.items(), key=lambda item: item[1])
+)
+\end{lstlisting}
