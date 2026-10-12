@@ -1341,4 +1341,237 @@ do not change it mid-operation.
 \endgroup
 
 
+
+% ============================================================
+% PAGE 7: SEGMENT TREE SEARCH (ITERATIVE)
+% ============================================================
+\clearpage
+\begingroup
+\lstset{
+  basicstyle=\ttfamily\fontsize{6.9}{7.5}\selectfont,
+  commentstyle=\color{black},
+  columns=fullflexible,
+  breaklines=false,
+  aboveskip=1pt,
+  belowskip=1pt
+}
+
+\newcommand{\searchhead}[1]{%
+  \par\vspace{5pt}\noindent
+  {\bfseries\fontsize{9.2}{11}\selectfont #1}%
+  \par\vspace{1pt}\hrule\vspace{3pt}
+}
+\newcommand{\searchcode}[1]{%
+  {\ttfamily\fontsize{7.1}{8.3}\selectfont\detokenize{#1}}%
+}
+\newcommand{\searchpattern}[3]{%
+  {\bfseries #1}\par
+  {\fontsize{8.35}{9.7}\selectfont
+  \textbf{Problem:} #2\par
+  \textbf{Approach:} #3\par}\vspace{3pt}
+}
+
+\subsection{Segment Tree Search --- Iterative}
+\vspace{2pt}
+{\small\textbf{0-based indexing.}
+Find first $\ge x$, $k$-th active, or first prefix sum $\ge x$.
+Build $O(n)$, search/update/query $O(\log n)$, space $O(n)$.}
+\par\vspace{4pt}
+\noindent
+
+% ============================================================
+% LEFT COLUMN: PYTHON CODE
+% ============================================================
+
+\begin{minipage}[t]{\textwidth}
+\begin{minipage}[t]{0.493\linewidth}
+\vspace{0pt}
+
+\begin{lstlisting}
+# Set MODE before building: SUM / MAX
+MODE = "SUM"
+
+def build(a):
+    global n,size,tree,combine,IDENTITY
+    n = len(a)
+    if not n: raise ValueError("Empty array")
+    if MODE == "SUM":
+        combine,IDENTITY = (lambda x,y:x+y),0
+    elif MODE == "MAX":
+        combine,IDENTITY = max,float('-inf')
+    else: raise ValueError("Invalid MODE")
+    size = 1 << (n-1).bit_length()
+    tree = [IDENTITY]*(2*size)
+    tree[size:size+n] = a
+    for p in range(size-1,0,-1):
+        tree[p] = combine(tree[2*p],tree[2*p+1])
+
+# Point replacement and addition
+def set_value(i,x):
+    p = i+size
+    tree[p] = x
+    while p > 1:
+        p >>= 1
+        tree[p] = combine(tree[2*p],tree[2*p+1])
+
+def add_value(i,x):
+    set_value(i,tree[size+i]+x)
+
+# Inclusive [l,r]: range SUM or MAX
+def query(l,r):
+    l += size; r += size
+    left = right = IDENTITY
+    while l <= r:
+        if l&1:
+            left = combine(left,tree[l]); l += 1
+        if not (r&1):
+            right = combine(tree[r],right); r -= 1
+        l >>= 1; r >>= 1
+    return combine(left,right)
+
+# MAX mode: first i >= start with a[i] >= x
+# Unsorted array is fine; -1 if absent
+def first_at_least(x,start=0):
+    if MODE != "MAX": raise ValueError("MAX only")
+    if start >= n: return -1
+    p = start+size
+    while True:
+        while p%2 == 0: p >>= 1
+        if tree[p] >= x:
+            while p < size:
+                p *= 2
+                if tree[p] < x: p += 1
+            i = p-size
+            return i if i < n else -1
+        p += 1
+        if (p & (p-1)) == 0: break
+    return -1
+
+# SUM mode: first prefix sum >= target
+# All values NON-NEGATIVE; target > 0
+def prefix_lower_bound(target):
+    if MODE != "SUM": raise ValueError("SUM only")
+    if target <= 0 or target > tree[1]:
+        return -1
+    p = 1
+    while p < size:
+        p *= 2
+        if tree[p] < target:
+            target -= tree[p]; p += 1
+    i = p-size
+    return i if i < n else -1
+
+# SUM mode: 1-based k, returns 0-based index
+# Requires non-negative integer frequencies
+def kth(k):
+    return prefix_lower_bound(k)
+\end{lstlisting}
+
+\end{minipage}%
+\hfill\vrule width 0.3pt\hfill%
+\begin{minipage}[t]{0.475\linewidth}
+\vspace{0pt}
+\raggedright
+
+\searchhead{Configuration and Searches}
+
+{\fontsize{8.35}{9.7}\selectfont
+Choose \searchcode{MODE} \emph{before} \searchcode{build(a)}.
+
+\par\vspace{2pt}
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Mode} & \textbf{Node stores} & \textbf{Use for}\\
+\hline
+MAX & Maximum & \searchcode{first_at_least}\\
+SUM & Sum & \searchcode{kth}, \searchcode{prefix_lower_bound}\\
+\hline
+\end{tabular}
+
+\par\vspace{3pt}
+Each search descends through the tree in $O(\log n)$;
+no repeated binary-search range queries.
+}
+
+\searchhead{Recognize These Problem Patterns}
+
+\searchpattern{1. First Element $\ge x$}
+{Update an unsorted array; find the first index $i\ge start$
+with \searchcode{a[i] >= x}.}
+{MAX mode. Skip nodes whose maximum is $<x$;
+descend to the leftmost qualifying leaf.}
+
+\searchpattern{2. $k$-th Remaining Element}
+{Repeatedly remove the $k$-th still-active item
+and report its original value.}
+{SUM mode. Build a tree of ones. Find \searchcode{pos=kth(k)},
+read \searchcode{a[pos]}, then \searchcode{set_value(pos,0)}.}
+
+\searchpattern{3. Prefix Sum Lower Bound}
+{Find first $i$ with $a_0+\cdots+a_i\ge x$.}
+{SUM mode with non-negative values. Go left if the left
+sum reaches $x$; otherwise subtract it and go right.}
+
+\searchpattern{4. $k$-th Smallest in a Multiset}
+{Insert/delete values with duplicates; find the $k$-th.}
+{SUM mode: leaves represent \emph{values}, and store frequencies.
+Use \searchcode{add_value(x,1/-1)} and \searchcode{kth(k)}.}
+
+\searchhead{Quick Usage Examples}
+
+\begin{lstlisting}
+# First >= 6 (MAX mode):
+MODE = "MAX"
+build([2, 4, 1, 8, 3, 7])
+first_at_least(6)       # 3
+first_at_least(6, 4)    # 5
+
+# K-th active (SUM mode, new build):
+MODE = "SUM"
+build([1, 0, 1, 1, 0, 1])
+kth(3)                  # 3
+set_value(3, 0)         # deactivate
+kth(3)                  # 5
+
+# Prefix lower bound (new build):
+build([2, 0, 3, 1])
+prefix_lower_bound(5)   # 2
+\end{lstlisting}
+
+\searchhead{Important Notes}
+
+\begin{itemize}[
+  leftmargin=11pt,
+  topsep=0pt,
+  itemsep=2pt,
+  parsep=0pt
+]
+
+\item Results are \textbf{0-based indices};
+$-1$ means not found.
+
+\item \searchcode{kth(k)} takes \textbf{1-based} $k$.
+
+\item SUM descent requires \textbf{non-negative}
+values; for $k$-th queries, use non-negative
+integer frequencies.
+
+\item \searchcode{prefix_lower_bound(x)} expects
+$x>0$; this template returns $-1$ for $x\le0$.
+
+\item MAX search does not require sorting.
+Never delete an absent value; compress large
+coordinates.
+
+\item Changing MODE requires rebuilding;
+only point updates.
+
+\end{itemize}
+
+\end{minipage}%
+\end{minipage}
+
+\endgroup
+
+
 \end{document}
