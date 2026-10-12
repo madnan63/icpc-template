@@ -1105,4 +1105,240 @@ For range updates use a
 \endgroup
 
 
+% ============================================================
+% PAGE 6: LAZY SEGMENT TREE (ITERATIVE)
+% ============================================================
+\clearpage
+\begingroup
+\lstset{
+  basicstyle=\ttfamily\fontsize{7.5}{8.45}\selectfont,
+  commentstyle=\color{black},
+  columns=fullflexible,
+  breaklines=false,
+  aboveskip=1pt,
+  belowskip=1pt
+}
+
+\newcommand{\lazyhead}[1]{%
+  \par\vspace{5pt}\noindent
+  {\bfseries\fontsize{9.2}{11}\selectfont #1}%
+  \par\vspace{1pt}\hrule\vspace{3pt}
+}
+\newcommand{\lazycode}[1]{%
+  {\ttfamily\fontsize{7.1}{8.3}\selectfont\detokenize{#1}}%
+}
+\newcommand{\lazypattern}[3]{%
+  {\bfseries #1}\par
+  {\fontsize{8.35}{9.7}\selectfont
+  \textbf{Problem:} #2\par
+  \textbf{Approach:} #3\par}\vspace{3pt}
+}
+
+\subsection{Lazy Segment Tree --- Iterative}
+\vspace{2pt}
+{\small\textbf{0-based, inclusive $[l,r]$.}
+Range add/set + SUM/MIN/MAX queries $O(\log n)$;
+build $O(n)$, space $O(n)$. No recursion.}
+\par\vspace{4pt}
+\noindent
+\begin{minipage}[t]{\textwidth}
+\begin{minipage}[t]{0.493\linewidth}
+\vspace{0pt}
+
+\begin{lstlisting}
+# SUM / MIN / MAX; 0-based, inclusive [l,r]
+MODE = "SUM"
+
+def build(a):
+    global n,size,height,tree,lazy_add,lazy_set,seg_len
+    global combine,IDENTITY
+    n = len(a)
+    if not n: raise ValueError("Empty array")
+    if MODE == "SUM":
+        combine,IDENTITY = (lambda x,y:x+y),0
+    elif MODE == "MIN":
+        combine,IDENTITY = min,float('inf')
+    elif MODE == "MAX":
+        combine,IDENTITY = max,float('-inf')
+    else: raise ValueError("Invalid MODE")
+    size = 1 << (n-1).bit_length()
+    height = size.bit_length()-1
+    tree = [IDENTITY]*(2*size)
+    tree[size:size+n] = a
+    lazy_add = [0]*size
+    lazy_set = [None]*size
+    seg_len = [1]*(2*size)
+    for p in range(size-1,0,-1):
+        seg_len[p] = seg_len[2*p]+seg_len[2*p+1]
+        tree[p] = combine(tree[2*p],tree[2*p+1])
+
+def _set(p,x):
+    tree[p] = x*seg_len[p] if MODE=="SUM" else x
+    if p < size:
+        lazy_set[p],lazy_add[p] = x,0
+
+def _add(p,x):
+    tree[p] += x*seg_len[p] if MODE=="SUM" else x
+    if p < size:
+        if lazy_set[p] is not None: lazy_set[p] += x
+        else: lazy_add[p] += x
+
+def _push(p):
+    if lazy_set[p] is not None:
+        _set(2*p,lazy_set[p]); _set(2*p+1,lazy_set[p])
+        lazy_set[p] = None
+    if lazy_add[p]:
+        _add(2*p,lazy_add[p]); _add(2*p+1,lazy_add[p])
+        lazy_add[p] = 0
+
+def _push_paths(L,R):
+    for h in range(height,0,-1):
+        if L & ((1<<h)-1): _push(L>>h)
+        if R & ((1<<h)-1): _push((R-1)>>h)
+
+def _pull_paths(L,R):
+    for h in range(1,height+1):
+        if L & ((1<<h)-1):
+            p = L>>h
+            tree[p] = combine(tree[2*p],tree[2*p+1])
+        if R & ((1<<h)-1):
+            p = (R-1)>>h
+            tree[p] = combine(tree[2*p],tree[2*p+1])
+
+def _apply(l,r,x,fn):
+    L,R = l+size,r+size+1
+    _push_paths(L,R)
+    a,b = L,R
+    while a < b:
+        if a&1: fn(a,x); a += 1
+        if b&1: b -= 1; fn(b,x)
+        a >>= 1; b >>= 1
+    _pull_paths(L,R)
+
+def range_add(l,r,x): _apply(l,r,x,_add)
+def range_set(l,r,x): _apply(l,r,x,_set)
+def add_value(i,x): range_add(i,i,x)
+def set_value(i,x): range_set(i,i,x)
+
+def query(l,r):
+    L,R = l+size,r+size+1
+    _push_paths(L,R)
+    left = right = IDENTITY
+    while L < R:
+        if L&1: left = combine(left,tree[L]); L += 1
+        if R&1: R -= 1; right = combine(tree[R],right)
+        L >>= 1; R >>= 1
+    return combine(left,right)
+\end{lstlisting}
+
+\end{minipage}%
+\hfill\vrule width 0.3pt\hfill%
+\begin{minipage}[t]{0.475\linewidth}
+\vspace{0pt}
+\raggedright
+
+\lazyhead{Configuration}
+
+{\fontsize{8.35}{9.7}\selectfont
+Set \lazycode{MODE} to \lazycode{"SUM"},
+\lazycode{"MIN"}, or \lazycode{"MAX"} before
+\lazycode{build(a)}. Rebuilding resets all lazy tags.
+
+\par\vspace{4pt}
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Mode} & \textbf{Combine} & \textbf{Neutral}\\
+\hline
+SUM & \lazycode{x+y} & 0\\
+MIN & \lazycode{min(x,y)} & $+\infty$\\
+MAX & \lazycode{max(x,y)} & $-\infty$\\
+\hline
+\end{tabular}
+}
+
+\lazyhead{Update Rules}
+
+{\fontsize{8.35}{9.7}\selectfont
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Mode} & \textbf{Add $x$} & \textbf{Set to $x$}\\
+\hline
+SUM & \lazycode{tree[p] += x * seg_len[p]} &
+      \lazycode{x * seg_len[p]}\\
+MIN/MAX & \lazycode{tree[p] += x} &
+          \lazycode{x}\\
+\hline
+\end{tabular}
+
+\par\vspace{3pt}
+\textbf{Priority:} SET overrides old additions.
+ADD after SET increases the pending set value.
+\lazycode{None} means no pending SET; zero is valid.
+}
+
+\lazyhead{Recognize These Problem Patterns}
+
+\lazypattern{1. Range Add + SUM}
+{Add $x$ to every element in $[l,r]$; query range sums.}
+{SUM mode; \lazycode{range_add(l,r,x)}, \lazycode{query(l,r)}.}
+
+\lazypattern{2. Range Set + SUM}
+{Assign all values in $[l,r]$ to $x$; query sums.}
+{SUM mode; \lazycode{range_set(l,r,x)}.}
+
+\lazypattern{3. Range Add/Set + MIN/MAX}
+{Apply updates to intervals; find minimum/maximum.}
+{Use MIN or MAX mode; same update/query functions.}
+
+\lazypattern{4. Overlapping Updates}
+{Several range additions and assignments overlap.}
+{Lazy tags preserve operation order; later SET overwrites
+old updates, later ADD increments pending SET.}
+
+\lazyhead{Quick Usage (SUM)}
+
+\begin{lstlisting}
+MODE = "SUM"
+build([1, 2, 3, 4])
+range_add(0, 3, 5)  # [6, 7, 8, 9]
+range_set(1, 2, 0)  # [6, 0, 0, 9]
+range_add(2, 3, 2)  # [6, 0, 2, 11]
+query(0, 3)        # 19
+set_value(0, 4)    # replace a[0]
+add_value(1, 3)    # add 3 to a[1]
+\end{lstlisting}
+
+\lazyhead{Important Notes}
+
+\begin{itemize}[
+  leftmargin=11pt,
+  topsep=0pt,
+  itemsep=2pt,
+  parsep=0pt
+]
+
+\item Valid range: $0\le l\le r<n$;
+endpoints inclusive.
+
+\item Internally use half-open $[L,R)$
+with \lazycode{R=r+size+1}.
+
+\item Push boundary paths \emph{before}
+applying/querying; pull affected ancestors
+\emph{after} updating.
+
+\item Range ADD / SET both $O(\log n)$;
+setting a point is just a length-one range update.
+
+\item Choose MODE before build;
+do not change it mid-operation.
+
+\end{itemize}
+
+\end{minipage}%
+\end{minipage}
+
+\endgroup
+
+
 \end{document}
