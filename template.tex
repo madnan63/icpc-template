@@ -1,126 +1,1577 @@
-\documentclass[9pt,a4paper]{article}
+\documentclass[9pt,a4paper]{extarticle}
 
-\usepackage[margin=0.45in]{geometry}
-\usepackage{amsmath,amssymb}
-\usepackage{listings}
-\usepackage{multicol}
-\usepackage{fancyhdr}
+% ---------- Compact ICPC-style Python Team Reference ----------
+\usepackage[a4paper,top=0.50in,bottom=0.45in,left=0.45in,right=0.45in]{geometry}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{microtype}
+\usepackage{transparent}
 
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{2pt}
-\setlength{\columnsep}{0.22in}
+% Preserve leading spaces better when copying code from a pdfLaTeX PDF.
+\makeatletter
+\def\@xobeysp{\leavevmode\nobreak\texttransparent{0}{\char32}}
+\makeatother
 
+% ---------- Team information ----------
+\newcommand{\UniversityName}{United International University}
+\newcommand{\TeamName}{Team: \rule{3.0cm}{0.4pt}}
+
+% ---------- Header / footer ----------
 \pagestyle{fancy}
 \fancyhf{}
-\lhead{\small United International University}
-\rhead{\small \thepage}
+\fancyhead[L]{\footnotesize \UniversityName\ --- \TeamName}
+\fancyhead[R]{\footnotesize Page \thepage}
 \renewcommand{\headrulewidth}{0.3pt}
+\setlength{\headheight}{12pt}
 
+% ---------- Spacing ----------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1pt}
+\setlength{\columnsep}{0.18in}
+\setlength{\columnseprule}{0.15pt}
+\setlist{nosep,leftmargin=*}
+
+\titleformat{\section}
+  {\normalsize\bfseries}
+  {}{0pt}{}
+  [\vspace{-2pt}\hrule]
+\titleformat{\subsection}
+  {\small\bfseries}
+  {}{0pt}{}
+\titlespacing*{\section}{0pt}{4pt}{3pt}
+\titlespacing*{\subsection}{0pt}{3pt}{1pt}
+
+% ---------- Code style: monochrome to save ink ----------
 \lstset{
-    language=Python,
-    basicstyle=\ttfamily\scriptsize,
-    columns=fullflexible,
-    keepspaces=true,
-    tabsize=4,
-    showstringspaces=false,
-    breaklines=true,
-    frame=single,
-    framerule=0.2pt,
-    aboveskip=2pt,
-    belowskip=3pt
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  stringstyle=\ttfamily,
+  showstringspaces=false,
+  keepspaces=true,
+  columns=flexible,
+  breaklines=false,
+  tabsize=4,
+  frame=none,
+  aboveskip=1pt,
+  belowskip=2pt,
+  xleftmargin=0pt,
+  xrightmargin=0pt
 }
 
+\newcommand{\code}[1]{\texttt{#1}}
+
 \begin{document}
+\small
+
+\begin{center}
+{\large\bfseries Python Competitive Programming Reference}\\[-2pt]
+{\footnotesize Compact team reference --- algorithms, mathematics, graphs, and data structures}
+\end{center}
+\vspace{-4pt}
 
 \begin{multicols}{2}
 
-\section{Python}
-\input{notes/python_syntax.tex}
+% ============================================================
+\section{Python Syntax, Formatting \& Fast I/O}
 
+\begin{lstlisting}
+# Binary string -> integer
+n = int(s, 2)
+
+# Integer -> zero-padded binary string
+b = format(x, f"0{width}b")
+
+# Float formatting
+print("%.2f" % value)
+print(f"{answer:.2f}")
+
+# Read entire input as integers
+import sys
+data = list(map(int, sys.stdin.buffer.read().split()))
+
+# Read entire input as strings
+words = sys.stdin.buffer.read().split()
+# bytes -> str only when needed: token.decode()
+\end{lstlisting}
+
+\subsection{Sorting a \texttt{defaultdict}}
+\begin{lstlisting}
+from collections import defaultdict
+
+# By key
+D = defaultdict(d.default_factory,
+                sorted(d.items()))
+
+# By value
+D = defaultdict(d.default_factory,
+                sorted(d.items(),
+                       key=lambda kv: kv[1]))
+\end{lstlisting}
+
+
+% ============================================================
 \section{Modular Arithmetic}
-\input{notes/modular_arithmetic.tex}
 
-\section{Series}
-\input{notes/series.tex}
+For modulus $M$:
+\[
+(a+b)\bmod M=((a\bmod M)+(b\bmod M))\bmod M
+\]
+\[
+(a-b)\bmod M=((a\bmod M)-(b\bmod M)+M)\bmod M
+\]
+\[
+(ab)\bmod M=((a\bmod M)(b\bmod M))\bmod M
+\]
 
-\section{Binary Search}
+In Python, \code{a \% M} is already non-negative for positive $M$.
 
-\subsection{First True: FFFFTTTT}
-\lstinputlisting{code/02_binary_search/first_true.py}
+% ============================================================
+\section{Sequences \& Series}
 
-\subsection{Last True: TTTTFFFF}
-\lstinputlisting{code/02_binary_search/last_true.py}
+\begin{align*}
+\sum_{i=1}^{n} i &= \frac{n(n+1)}2 \\
+\sum_{i=1}^{n} i^2 &= \frac{n(n+1)(2n+1)}6 \\
+\sum_{i=1}^{n} i^3 &= \left(\frac{n(n+1)}2\right)^2 \\
+\sum_{k=0}^{n-1}(a+kd) &= \frac{n(2a+(n-1)d)}2 \\
+\sum_{i=1}^{n}(2i-1) &= n^2 \\
+\sum_{i=1}^{n}2i &= n(n+1)
+\end{align*}
 
+Arithmetic progression squares:
+\begin{align*}
+\sum_{k=0}^{n-1}(a+kd)^2
+={}&na^2+a d\,n(n-1)\\
+&+d^2\frac{n(n-1)(2n-1)}6
+\end{align*}
+
+Arithmetic progression cubes:
+\begin{align*}
+\sum_{k=0}^{n-1}(a+kd)^3
+={}&na^3
++3a^2d\frac{n(n-1)}2\\
+&+3ad^2\frac{n(n-1)(2n-1)}6\\
+&+d^3\left(\frac{n(n-1)}2\right)^2
+\end{align*}
+
+Geometric progression ($r\ne1$):
+\[
+\sum_{k=0}^{n-1} ar^k=a\frac{r^n-1}{r-1}
+\]
+For $r=1$, the sum is $an$.
+
+\subsection{Alternating Sum}
+\begin{lstlisting}
+# 1 - 2 + 3 - 4 + ... +/- n
+alt_sum = -n // 2 if n % 2 == 0 else (n + 1) // 2
+
+# 1^k - 2^k + 3^k - ... +/- n^k
+alt_pow_sum = sum((1 if i & 1 else -1) * i**k
+                  for i in range(1, n + 1))
+\end{lstlisting}
+
+% ============================================================
+\section{Binary Search on Answer}
+
+\subsection{First True / Minimum Valid: FFFFFTTTTT}
+\begin{lstlisting}
+def check(x):
+    return ...
+
+l, r = ..., ...
+ans = -1
+while l <= r:
+    m = (l + r) // 2
+    if check(m):
+        ans = m
+        r = m - 1
+    else:
+        l = m + 1
+print(ans)
+\end{lstlisting}
+
+\subsection{Last True / Maximum Valid: TTTTTFFFFF}
+\begin{lstlisting}
+def check(x):
+    return ...
+
+l, r = ..., ...
+ans = -1
+while l <= r:
+    m = (l + r) // 2
+    if check(m):
+        ans = m
+        l = m + 1
+    else:
+        r = m - 1
+print(ans)
+\end{lstlisting}
+
+\textbf{Requirement:} \code{check(x)} must be monotonic over the search interval.
+
+% ============================================================
 \section{Number Theory}
 
-\input{notes/number_theory_formulas.tex}
-
 \subsection{GCD / LCM}
-\lstinputlisting{code/03_number_theory/gcd.py}
+\begin{lstlisting}
+from math import gcd
+lcm = a // gcd(a, b) * b
 
-\subsection{Prime Factorization}
-\lstinputlisting{code/03_number_theory/factorization.py}
+# Euclid; useful when b itself is supplied via b % a
+# without constructing a huge decimal integer.
+def gcd_euclid(a, b):
+    while a:
+        a, b = b % a, a
+    return b
+\end{lstlisting}
 
-\subsection{All Divisors}
-\lstinputlisting{code/03_number_theory/divisors.py}
+\subsection{Prime Factorization by Trial Division}
+\begin{lstlisting}
+from collections import defaultdict
+from math import isqrt
 
-\subsection{Divisor Count Sieve}
-\lstinputlisting{code/03_number_theory/divisor_count_sieve.py}
+def factors(n):
+    f = defaultdict(int)
+    while n % 2 == 0:
+        f[2] += 1
+        n //= 2
+    p = 3
+    while p * p <= n:
+        while n % p == 0:
+            f[p] += 1
+            n //= p
+        p += 2
+    if n > 1:
+        f[n] += 1
+    return f
+\end{lstlisting}
 
-\subsection{Sieve of Eratosthenes}
-\lstinputlisting{code/03_number_theory/sieve.py}
+If $n=\prod p_i^{e_i}$:
+\[
+\tau(n)=\prod(e_i+1),\qquad
+\sigma(n)=\prod\frac{p_i^{e_i+1}-1}{p_i-1}.
+\]
 
-\subsection{Bytearray Sieve}
-\lstinputlisting{code/03_number_theory/bytearray_sieve.py}
+\begin{lstlisting}
+def num_divisors(fact):
+    ans = 1
+    for e in fact.values():
+        ans *= e + 1
+    return ans
+\end{lstlisting}
 
-\subsection{SPF Factorization}
-\lstinputlisting{code/03_number_theory/spf_factorization.py}
+\subsection{Divisor Count / Sum for Every $1\ldots N$}
+\begin{lstlisting}
+N = 10**5
+divcnt = [0] * (N + 1)
+for i in range(1, N + 1):
+    for j in range(i, N + 1, i):
+        divcnt[j] += 1
 
-\subsection{Goldbach}
-\lstinputlisting{code/03_number_theory/goldbach.py}
+# Sum of divisors instead:
+# divsum[j] += i
+\end{lstlisting}
+
+\subsection{Ordinary Sieve of Eratosthenes}
+\begin{lstlisting}
+def sieve(N):
+    is_prime = bytearray(b'\x01') * (N + 1)
+    if N >= 0: is_prime[0] = 0
+    if N >= 1: is_prime[1] = 0
+    for p in range(2, int(N**0.5) + 1):
+        if is_prime[p]:
+            start = p * p
+            is_prime[start:N+1:p] = b'\x00' * (
+                (N - start) // p + 1)
+    return is_prime
+\end{lstlisting}
+
+\subsection{Odd-Only Bytearray Sieve}
+Index $i$ represents the odd number $2i+1$.
+\begin{lstlisting}
+from math import isqrt
+
+def sieve_bytearray(N):
+    size = (N + 1) // 2
+    s = bytearray(b'\x01') * size
+    if size:
+        s[0] = 0                  # 1 is not prime
+
+    lim = (isqrt(N) - 1) // 2
+    for i in range(1, lim + 1):
+        if s[i]:
+            p = 2 * i + 1
+            start = (p * p) // 2
+            s[start::p] = b'\x00' * (
+                (size - start - 1) // p + 1)
+    return s
+
+N = 10**6 + 7
+a = sieve_bytearray(N)
+
+def is_prime_fast(x):
+    if x == 2:
+        return True
+    if x < 2 or x % 2 == 0 or x > N:
+        return False
+    return bool(a[x // 2])
+\end{lstlisting}
+
+\subsection{Compact Prime List from Odd Sieve}
+\begin{lstlisting}
+from array import array
+
+primes = array('I', [2])
+for i in range(1, len(a)):
+    if a[i]:
+        primes.append(2 * i + 1)
+\end{lstlisting}
+
+\subsection{Smallest Prime Factor (SPF) --- Many Queries}
+Preprocess once; each factorization takes $O(\log n)$ factors with multiplicity.
+\begin{lstlisting}
+N = 10**6 + 9
+spf = list(range(N + 1))
+
+for i in range(2, int(N**0.5) + 1):
+    if spf[i] == i:
+        for j in range(i * i, N + 1, i):
+            if spf[j] == j:
+                spf[j] = i
+
+def factorize(n):
+    res = []
+    while n > 1:
+        p = spf[n]
+        res.append(p)
+        n //= p
+    return res
+\end{lstlisting}
+
+\subsection{All Divisors of One Number}
+\begin{lstlisting}
+def all_divisors(n):
+    d = []
+    i = 1
+    while i * i <= n:
+        if n % i == 0:
+            d.append(i)
+            if i != n // i:
+                d.append(n // i)
+        i += 1
+    return d              # sort(d) if order matters
+\end{lstlisting}
+
+\subsection{Goldbach Pair for an Even Integer}
+\begin{lstlisting}
+def goldbach(n, is_prime):
+    if n < 4 or n % 2:
+        return None
+    for p in range(2, n // 2 + 1):
+        if is_prime[p] and is_prime[n - p]:
+            return p, n - p
+    return None
+\end{lstlisting}
 
 \subsection{Binary Exponentiation}
-\lstinputlisting{code/03_number_theory/binary_exponentiation.py}
+\begin{lstlisting}
+def bin_exp(a, b, mod=None):
+    res = 1
+    while b:
+        if b & 1:
+            res = res * a if mod is None else res * a % mod
+        a = a * a if mod is None else a * a % mod
+        b >>= 1
+    return res
 
-\subsection{Miller--Rabin}
-\lstinputlisting{code/03_number_theory/miller_rabin.py}
+# Python built-in modular exponentiation:
+# pow(a, b, MOD)
+\end{lstlisting}
 
-\subsection{Factorials / nCr}
-\lstinputlisting{code/03_number_theory/factorial_ncr.py}
+\subsection{Deterministic Miller--Rabin for 64-bit Integers}
+\begin{lstlisting}
+def is_prime_mr(n):
+    if n < 2:
+        return False
+    small = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
+    for p in small:
+        if n % p == 0:
+            return n == p
 
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+
+    for a in (2, 325, 9375, 28178, 450775,
+              9780504, 1795265022):
+        if a % n == 0:
+            continue
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(s - 1):
+            x = x * x % n
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+\end{lstlisting}
+
+\subsection{Factorials, Inverse Factorials \& $nCr$}
+Requires prime \code{MOD} and $n<\text{MOD}$ for Fermat inverse.
+\begin{lstlisting}
+MOD = 10**9 + 7
+MAXN = 2000
+
+fact = [1] * (MAXN + 1)
+for i in range(1, MAXN + 1):
+    fact[i] = fact[i - 1] * i % MOD
+
+inv_fact = [1] * (MAXN + 1)
+inv_fact[MAXN] = pow(fact[MAXN], MOD - 2, MOD)
+for i in range(MAXN, 0, -1):
+    inv_fact[i - 1] = inv_fact[i] * i % MOD
+
+def nCr(n, r):
+    if r < 0 or r > n:
+        return 0
+    return fact[n] * inv_fact[r] % MOD * inv_fact[n-r] % MOD
+\end{lstlisting}
+
+% ============================================================
 \section{Geometry}
 
-\input{notes/geometry.tex}
+\subsection{Triangle Area --- Heron's Formula}
+For sides $a,b,c$ and $s=(a+b+c)/2$:
+\[
+K=\sqrt{s(s-a)(s-b)(s-c)}.
+\]
 
-\subsection{Polygon Area}
-\lstinputlisting{code/04_geometry/polygon_area.py}
+\subsection{Law of Cosines}
+For triangle $ABC$, side $AB$ is opposite angle $C$:
+\begin{lstlisting}
+from math import acos, degrees
+C = degrees(acos((BC*BC + CA*CA - AB*AB)
+                 / (2 * BC * CA)))
+\end{lstlisting}
+Clamp the cosine to $[-1,1]$ if floating-point error is possible.
 
-\section{Graphs}
+\subsection{Polygon Area --- Shoelace Formula}
+\begin{lstlisting}
+def polygon_area2(points):
+    # Returns twice the area; exact for integer coordinates.
+    area2 = 0
+    n = len(points)
+    for i in range(n):
+        x1, y1 = points[i]
+        x2, y2 = points[(i + 1) % n]
+        area2 += x1 * y2 - y1 * x2
+    return abs(area2)
 
-\subsection{DFS Maximum Depth}
-\lstinputlisting{code/05_graph/dfs_max_depth.py}
+# area = polygon_area2(points) / 2
+\end{lstlisting}
 
-\subsection{Tree Traversals}
-\lstinputlisting{code/05_graph/tree_traversal.py}
+% ============================================================
+\section{Graph Algorithms}
 
-\subsection{Dijkstra}
-\lstinputlisting{code/05_graph/dijkstra.py}
+\subsection{Iterative DFS with Traversal Depth}
+For a tree this is depth from \code{start}; in a general graph it is DFS-tree depth.
+\begin{lstlisting}
+def dfs_max_depth(start, graph):
+    seen = {start}
+    stack = [(start, 1)]
+    best = 0
+    while stack:
+        u, dep = stack.pop()
+        best = max(best, dep)
+        for v in graph[u]:
+            if v not in seen:
+                seen.add(v)
+                stack.append((v, dep + 1))
+    return best
+\end{lstlisting}
 
-\subsection{Topological Sort}
-\lstinputlisting{code/05_graph/topological_sort.py}
+\subsection{Binary Tree Inorder Traversal}
+\begin{lstlisting}
+def inorder(tree, root):
+    ans, st = [], []
+    cur = root
+    while cur is not None or st:
+        while cur is not None:
+            st.append(cur)
+            cur = tree.get(cur, (None, None))[0]
+        cur = st.pop()
+        ans.append(cur)
+        cur = tree.get(cur, (None, None))[1]
+    return ans
+\end{lstlisting}
 
-\subsection{DSU}
-\lstinputlisting{code/05_graph/dsu.py}
+\subsection{N-ary Tree Preorder \& Postorder}
+\begin{lstlisting}
+def dfs_orders(tree, root):
+    pre, post = [], []
+    st = [(root, 0)]
+    while st:
+        u, i = st.pop()
+        if i == 0:
+            pre.append(u)
+        ch = tree.get(u, [])
+        if i < len(ch):
+            st.append((u, i + 1))
+            st.append((ch[i], 0))
+        else:
+            post.append(u)
+    return pre, post
+\end{lstlisting}
 
+\subsection{Dijkstra --- Non-negative Edge Weights}
+Adjacency list: \code{graph[u] = [(v,w), ...]}.
+\begin{lstlisting}
+import heapq
+
+def dijkstra(n, graph, src=1):
+    INF = float('inf')
+    dist = [INF] * (n + 1)
+    par = [-1] * (n + 1)
+    dist[src] = 0
+    pq = [(0, src)]
+
+    while pq:
+        du, u = heapq.heappop(pq)
+        if du != dist[u]:
+            continue
+        for v, w in graph[u]:
+            nd = du + w
+            if nd < dist[v]:
+                dist[v] = nd
+                par[v] = u
+                heapq.heappush(pq, (nd, v))
+    return dist, par
+
+def restore_path(par, src, target):
+    path = []
+    u = target
+    while u != -1:
+        path.append(u)
+        if u == src:
+            return path[::-1]
+        u = par[u]
+    return []
+\end{lstlisting}
+
+\subsection{Topological Sort --- Kahn's Algorithm}
+\begin{lstlisting}
+from collections import deque
+
+def topo_sort(graph, n):
+    indeg = [0] * (n + 1)
+    for u in range(1, n + 1):
+        for v in graph[u]:
+            indeg[v] += 1
+
+    q = deque(i for i in range(1, n + 1)
+              if indeg[i] == 0)
+    order = []
+    while q:
+        u = q.popleft()
+        order.append(u)
+        for v in graph[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                q.append(v)
+
+    return order if len(order) == n else []  # [] => cycle
+\end{lstlisting}
+
+% ============================================================
 \section{Data Structures}
 
-\subsection{Fenwick Tree}
-\lstinputlisting{code/06_data_structures/fenwick_tree.py}
+\subsection{DSU / Union--Find}
+1-indexed, iterative path compression, union by size.
+\begin{lstlisting}
+n = 10
+parent = list(range(n + 1))
+sz = [1] * (n + 1)
 
-\subsection{Segment Tree (Minimum)}
-\lstinputlisting{code/06_data_structures/segment_tree_min.py}
+def find(u):
+    root = u
+    while parent[root] != root:
+        root = parent[root]
+    while u != root:
+        nxt = parent[u]
+        parent[u] = root
+        u = nxt
+    return root
+
+def union(u, v):
+    u, v = find(u), find(v)
+    if u == v:
+        return False
+    if sz[u] < sz[v]:
+        u, v = v, u
+    parent[v] = u
+    sz[u] += sz[v]
+    return True
+
+# Same component: find(a) == find(b)
+# Components after all unions:
+# len({find(i) for i in range(1, n + 1)})
+\end{lstlisting}
+
+% ============================================================
+% FENWICK TREE — V2 UPDATED SECTION
+% ============================================================
+% Dedicated full-width page with compact code and notes.
+% Other sections retain their original code.
 
 \end{multicols}
+\clearpage
+
+\begingroup
+
+% Compact code style only for Fenwick Tree
+\lstset{
+  basicstyle=\ttfamily\fontsize{7.75}{9.3}\selectfont,
+  commentstyle=\color{black},
+  columns=fullflexible,
+  breaklines=true,
+  breakatwhitespace=true,
+  aboveskip=2pt,
+  belowskip=2pt
+}
+
+\newcommand{\bithead}[1]{%
+  \par\vspace{5pt}\noindent
+  {\bfseries\fontsize{9.5}{11}\selectfont #1}%
+  \par\vspace{1pt}\hrule\vspace{3pt}
+}
+
+\newcommand{\bitcode}[1]{%
+  {\ttfamily\fontsize{7.2}{8.5}\selectfont\detokenize{#1}}%
+}
+
+\newcommand{\bitpattern}[3]{%
+  {\bfseries #1}\par
+  {\fontsize{8.4}{9.8}\selectfont
+    \textbf{Problem:} #2\par
+    \textbf{Approach:} #3\par
+  }\vspace{3pt}
+}
+
+\subsection{Fenwick Tree / Binary Indexed Tree}
+
+\vspace{2pt}
+
+{\small
+\textbf{1-based indexing.}
+Build $O(N)$, point update and prefix/range queries
+$O(\log N)$, space $O(N)$.
+}
+
+\vspace{4pt}
+
+\noindent
+\begin{minipage}[t]{0.493\textwidth}
+\vspace{0pt}
+
+\bithead{Fenwick Tree / Binary Indexed Tree}
+
+\begin{lstlisting}
+N = 200005
+bit = [0] * (N + 1)
+arr = [0] * (N + 1)
+
+# Build from a 0-indexed list, O(N)
+def build(values):
+    if len(values) > N:
+        raise ValueError("Too many values")
+    bit[:] = [0] * (N + 1)
+    arr[:] = [0] * (N + 1)
+    for i, x in enumerate(values, 1):
+        arr[i] = x
+        bit[i] = x
+    for i in range(1, N + 1):
+        j = i + (i & -i)
+        if j <= N:
+            bit[j] += bit[i]
+
+# Add val at position i
+# (does not replace it)
+def update(i, val):
+    arr[i] += val
+    while i <= N:
+        bit[i] += val
+        i += i & -i
+
+# Prefix sum [1, i]
+def query(i):
+    ans = 0
+    while i > 0:
+        ans += bit[i]
+        i -= i & -i
+    return ans
+
+# Inclusive range sum [l, r]
+def range_query(l, r):
+    return query(r) - query(l - 1)
+
+# Replace arr[i] with val
+def set_value(i, val):
+    update(i, val - arr[i])
+
+# First index i with query(i) >= k
+# Needs non-negative frequencies
+def kth(k):
+    if k <= 0 or k > query(N):
+        return -1
+    i = 0
+    step = 1 << (N.bit_length() - 1)
+    while step:
+        nxt = i + step
+        if nxt <= N and bit[nxt] < k:
+            k -= bit[nxt]
+            i = nxt
+        step >>= 1
+    return i + 1
+\end{lstlisting}
+
+\bithead{Initialize}
+
+\begin{lstlisting}
+# Build once from an existing array:
+build([2, 4, 1, 5, 3])
+# Or start empty and call update(i, x)
+\end{lstlisting}
+
+\end{minipage}%
+\hfill\vrule width 0.3pt\hfill
+\begin{minipage}[t]{0.475\textwidth}
+\vspace{0pt}
+\raggedright
+
+\bithead{Recognize These Problem Patterns}
+
+\bitpattern{1. Dynamic Range Sum}
+{Given an array, support point additions/assignments
+and sum queries over $[l,r]$.}
+{Store values by position. Use
+\bitcode{update(i,x)},
+\bitcode{set_value(i,x)}, and
+\bitcode{range_query(l,r)}.}
+
+\bitpattern{2. K-th Smallest in a Multiset}
+{Insert/delete integer values (including duplicates)
+and find the $k$-th smallest.}
+{Store frequencies at value indices.
+Insert: \bitcode{update(x,1)};
+delete: \bitcode{update(x,-1)};
+answer: \bitcode{kth(k)}.}
+
+\bitpattern{3. K-th Remaining Element}
+{Given an unsorted array, repeatedly remove and
+print the $k$-th still-active element
+(CSES List Removals).}
+{Store 1 for active original positions and 0
+for removed ones:
+\bitcode{build([1]*n)},
+\bitcode{pos=kth(k)},
+print \bitcode{a[pos-1]},
+then \bitcode{update(pos,-1)}.}
+
+\bitpattern{4. Count Values in a Range}
+{Maintain a multiset and count how many
+values lie in $[l,r]$.}
+{Store frequencies by value and use
+\bitcode{range_query(l,r)} to count occurrences.}
+
+\bithead{Quick Usage Examples}
+
+\begin{lstlisting}
+# Normal range sum:
+build([2, 4, 1, 5, 3])
+range_query(2, 4)  # 10
+update(3, 5)       # add 5
+range_query(2, 4)  # 15
+set_value(2, 10)   # replace index 2
+
+# CSES List Removals (fresh tree):
+a = [2, 6, 1, 4, 2]
+removals = [3, 1, 3, 1, 1]
+build([1] * len(a))
+ans = []
+for k in removals:
+    pos = kth(k)
+    ans.append(a[pos - 1])
+    update(pos, -1)
+# ans: [1, 2, 2, 6, 4]
+\end{lstlisting}
+
+\bithead{SUM $\rightarrow$ XOR Customization}
+
+{\fontsize{8.4}{9.8}\selectfont
+Replace the following operations; the loops stay unchanged.
+
+\par\vspace{2pt}
+\renewcommand{\arraystretch}{1.1}
+
+\begin{tabular}{@{}ll@{}}
+\hline
+\textbf{Function} & \textbf{Change} \\
+\hline
+\bitcode{build} & \bitcode{bit[j] ^= bit[i]} \\
+\bitcode{update} & \bitcode{arr[i] ^= val}, \bitcode{bit[i] ^= val} \\
+\bitcode{query} & \bitcode{ans ^= bit[i]} \\
+\bitcode{range_query} & \bitcode{query(r) ^ query(l-1)} \\
+\bitcode{set_value} & \bitcode{update(i, val ^ arr[i])} \\
+\hline
+\end{tabular}
+
+\par\vspace{2pt}
+\textbf{Note:} \bitcode{kth(k)} is not supported in XOR mode.
+}
+
+\bithead{Important Notes}
+
+\begin{itemize}[
+  leftmargin=11pt,
+  topsep=0pt,
+  itemsep=1pt,
+  parsep=0pt
+]
+\item Indices: $1\le i\le N$.
+Never call \bitcode{update(0,x)}.
+
+\item \bitcode{update(i,x)} adds;
+\bitcode{set_value(i,x)} replaces.
+
+\item \bitcode{kth(k)} finds the first index
+whose prefix sum is $\ge k$.
+Values must be non-negative.
+
+\item For frequency queries, never delete
+an absent value. Compress large/negative
+value coordinates.
+
+\item Reset the tree between independent examples.
+\end{itemize}
+
+\end{minipage}
+
+\endgroup
+
+
+% ============================================================
+% PAGE 5: BASIC SEGMENT TREE
+% ============================================================
+\clearpage
+\begingroup
+
+\lstset{
+  basicstyle=\ttfamily\fontsize{7.75}{9.3}\selectfont,
+  commentstyle=\color{black},
+  columns=fullflexible,
+  breaklines=true,
+  breakatwhitespace=true,
+  aboveskip=2pt,
+  belowskip=2pt
+}
+
+\newcommand{\seghead}[1]{%
+  \par\vspace{5pt}\noindent
+  {\bfseries\fontsize{9.5}{11}\selectfont #1}%
+  \par\vspace{1pt}\hrule\vspace{3pt}
+}
+
+\newcommand{\segcode}[1]{%
+  {\ttfamily\fontsize{7.15}{8.5}\selectfont
+   \detokenize{#1}}%
+}
+
+\newcommand{\segpattern}[3]{%
+  {\bfseries #1}\par
+  {\fontsize{8.4}{9.8}\selectfont
+    \textbf{Problem:} #2\par
+    \textbf{Approach:} #3\par
+  }\vspace{3pt}
+}
+
+
+\subsection{Segment Tree --- Basic (Iterative)}
+\vspace{2pt}
+
+{\small
+\textbf{0-based indexing, inclusive $[l,r]$.}
+Build $O(n)$, point update and range query
+$O(\log n)$, space $O(n)$.
+}
+
+\vspace{4pt}
+\noindent
+
+% ============================================================
+% LEFT COLUMN: PYTHON TEMPLATE
+% ============================================================
+
+\begin{minipage}[t]{\textwidth}
+\begin{minipage}[t]{0.493\linewidth}
+\vspace{0pt}
+
+\seghead{Segment Tree — Basic (Iterative)}
+
+\begin{lstlisting}
+from math import gcd
+
+# Choose before building (default: MIN)
+combine = min
+IDENTITY = float('inf')
+
+# Build from a 0-indexed list, O(n)
+def seg_build(arr):
+    n = len(arr)
+    size = 1
+    while size < n:
+        size <<= 1
+    tree = [IDENTITY] * (2 * size)
+    tree[size:size + n] = arr
+    for i in range(size - 1, 0, -1):
+        tree[i] = combine(tree[2*i],
+                          tree[2*i+1])
+    return tree, size
+
+# Inclusive query [l, r]
+def seg_query(tree, size, l, r):
+    l += size
+    r += size
+    left = right = IDENTITY
+    while l <= r:
+        if l & 1:
+            left = combine(left, tree[l])
+            l += 1
+        if not (r & 1):
+            right = combine(tree[r], right)
+            r -= 1
+        l >>= 1
+        r >>= 1
+    return combine(left, right)
+
+# Replace arr[i] with val
+def seg_update(tree, size, i, val):
+    i += size
+    tree[i] = val
+    i >>= 1
+    while i:
+        tree[i] = combine(tree[2*i],
+                          tree[2*i+1])
+        i >>= 1
+
+# Add val to arr[i] (point addition)
+def seg_add(tree, size, i, val):
+    old = tree[size + i]
+    seg_update(tree, size, i, old + val)
+\end{lstlisting}
+
+
+\seghead{Initialize}
+
+\begin{lstlisting}
+a = [8, 3, 5, 1, 6]
+tree, size = seg_build(a)
+seg_query(tree, size, 1, 4)  # 1
+seg_update(tree, size, 3, 9)
+seg_query(tree, size, 1, 4)  # 3
+seg_add(tree, size, 1, -2)
+seg_query(tree, size, 1, 4)  # 1
+\end{lstlisting}
+
+\end{minipage}%
+\hfill\vrule width 0.3pt\hfill%
+% RIGHT COLUMN: CUSTOMIZATIONS AND APPLICATIONS
+\begin{minipage}[t]{0.475\linewidth}
+\vspace{0pt}
+\raggedright
+
+\seghead{Customize: \segcode{combine} + \segcode{IDENTITY}}
+
+{\fontsize{8.4}{9.8}\selectfont
+Change \textbf{both} lines \emph{before}
+\segcode{seg_build(arr)}.
+The rest of the template stays the same.
+
+\par\vspace{2pt}
+
+\renewcommand{\arraystretch}{1.11}
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Query} & \textbf{combine} & \textbf{IDENTITY} \\
+\hline
+SUM & \segcode{lambda a,b:a+b} & \segcode{0} \\
+MIN & \segcode{min} & \segcode{float('inf')} \\
+MAX & \segcode{max} & \segcode{float('-inf')} \\
+XOR & \segcode{lambda a,b:a^b} & \segcode{0} \\
+GCD & \segcode{gcd} & \segcode{0} \\
+AND & \segcode{lambda a,b:a&b} & \segcode{-1} \\
+OR & \segcode{lambda a,b:a|b} & \segcode{0} \\
+\hline
+\end{tabular}
+}
+
+
+\seghead{Recognize These Problem Patterns}
+
+\segpattern{1. Dynamic Range Sum}
+{Point assignments/additions; sum of positions $[l,r]$.}
+{Use SUM mode, \segcode{seg_update}, \segcode{seg_add},
+\segcode{seg_query}. }
+
+\segpattern{2. Range Minimum / Maximum}
+{Update individual values; find smallest/largest in $[l,r]$.}
+{Use MIN or MAX mode.}
+
+
+\segpattern{3. Dynamic Range GCD}
+{Update one value; calculate GCD over $[l,r]$.}
+{Use \segcode{combine = gcd}, \segcode{IDENTITY = 0}.}
+
+\segpattern{4. Range XOR}
+{Point updates and XOR over $[l,r]$.}
+{Use XOR mode; aggregate neighboring segments with XOR.}
+
+\segpattern{5. Bitwise AND / OR}
+{Point updates and bitwise AND/OR over $[l,r]$.}
+{Use AND (identity $-1$) or OR (identity $0$).}
+
+
+\seghead{Quick Usage: SUM Mode}
+
+\begin{lstlisting}
+combine = lambda a, b: a + b
+IDENTITY = 0
+tree, size = seg_build([2, 4, 1, 5, 3])
+seg_query(tree, size, 1, 3)  # 10
+seg_update(tree, size, 2, 7)
+seg_query(tree, size, 1, 3)  # 16
+seg_add(tree, size, 1, 3)
+seg_query(tree, size, 1, 3)  # 19
+\end{lstlisting}
+
+
+\seghead{Important Notes}
+
+\begin{itemize}[
+  leftmargin=11pt,
+  topsep=0pt,
+  itemsep=1pt,
+  parsep=0pt
+]
+
+\item Queries are \textbf{inclusive} $[l,r]$;
+indices start at $0$. Use a non-empty array
+and valid indices.
+
+\item \segcode{seg_update(i,x)}
+\textbf{replaces};
+\segcode{seg_add(i,x)}
+\textbf{adds}, regardless of query mode.
+Pass \segcode{tree,size} first.
+
+\item The combine operation must be
+\textbf{associative}; identity must be
+neutral on both sides.
+
+\item Two query accumulators preserve order
+for noncommutative operations.
+
+\item Rebuild the tree after changing
+combine/identity.
+For range updates use a
+\textbf{Lazy Segment Tree}.
+
+\end{itemize}
+
+\end{minipage}%
+\end{minipage}
+
+\endgroup
+
+
+% ============================================================
+% PAGE 6: LAZY SEGMENT TREE (ITERATIVE)
+% ============================================================
+\clearpage
+\begingroup
+\lstset{
+  basicstyle=\ttfamily\fontsize{7.5}{8.45}\selectfont,
+  commentstyle=\color{black},
+  columns=fullflexible,
+  breaklines=false,
+  aboveskip=1pt,
+  belowskip=1pt
+}
+
+\newcommand{\lazyhead}[1]{%
+  \par\vspace{5pt}\noindent
+  {\bfseries\fontsize{9.2}{11}\selectfont #1}%
+  \par\vspace{1pt}\hrule\vspace{3pt}
+}
+\newcommand{\lazycode}[1]{%
+  {\ttfamily\fontsize{7.1}{8.3}\selectfont\detokenize{#1}}%
+}
+\newcommand{\lazypattern}[3]{%
+  {\bfseries #1}\par
+  {\fontsize{8.35}{9.7}\selectfont
+  \textbf{Problem:} #2\par
+  \textbf{Approach:} #3\par}\vspace{3pt}
+}
+
+\subsection{Lazy Segment Tree --- Iterative}
+\vspace{2pt}
+{\small\textbf{0-based, inclusive $[l,r]$.}
+Range add/set + SUM/MIN/MAX queries $O(\log n)$;
+build $O(n)$, space $O(n)$. No recursion.}
+\par\vspace{4pt}
+\noindent
+\begin{minipage}[t]{\textwidth}
+\begin{minipage}[t]{0.493\linewidth}
+\vspace{0pt}
+
+\begin{lstlisting}
+# SUM / MIN / MAX; 0-based, inclusive [l,r]
+MODE = "SUM"
+
+def build(a):
+    global n,size,height,tree,lazy_add,lazy_set,seg_len
+    global combine,IDENTITY
+    n = len(a)
+    if not n: raise ValueError("Empty array")
+    if MODE == "SUM":
+        combine,IDENTITY = (lambda x,y:x+y),0
+    elif MODE == "MIN":
+        combine,IDENTITY = min,float('inf')
+    elif MODE == "MAX":
+        combine,IDENTITY = max,float('-inf')
+    else: raise ValueError("Invalid MODE")
+    size = 1 << (n-1).bit_length()
+    height = size.bit_length()-1
+    tree = [IDENTITY]*(2*size)
+    tree[size:size+n] = a
+    lazy_add = [0]*size
+    lazy_set = [None]*size
+    seg_len = [1]*(2*size)
+    for p in range(size-1,0,-1):
+        seg_len[p] = seg_len[2*p]+seg_len[2*p+1]
+        tree[p] = combine(tree[2*p],tree[2*p+1])
+
+def _set(p,x):
+    tree[p] = x*seg_len[p] if MODE=="SUM" else x
+    if p < size:
+        lazy_set[p],lazy_add[p] = x,0
+
+def _add(p,x):
+    tree[p] += x*seg_len[p] if MODE=="SUM" else x
+    if p < size:
+        if lazy_set[p] is not None: lazy_set[p] += x
+        else: lazy_add[p] += x
+
+def _push(p):
+    if lazy_set[p] is not None:
+        _set(2*p,lazy_set[p]); _set(2*p+1,lazy_set[p])
+        lazy_set[p] = None
+    if lazy_add[p]:
+        _add(2*p,lazy_add[p]); _add(2*p+1,lazy_add[p])
+        lazy_add[p] = 0
+
+def _push_paths(L,R):
+    for h in range(height,0,-1):
+        if L & ((1<<h)-1): _push(L>>h)
+        if R & ((1<<h)-1): _push((R-1)>>h)
+
+def _pull_paths(L,R):
+    for h in range(1,height+1):
+        if L & ((1<<h)-1):
+            p = L>>h
+            tree[p] = combine(tree[2*p],tree[2*p+1])
+        if R & ((1<<h)-1):
+            p = (R-1)>>h
+            tree[p] = combine(tree[2*p],tree[2*p+1])
+
+def _apply(l,r,x,fn):
+    L,R = l+size,r+size+1
+    _push_paths(L,R)
+    a,b = L,R
+    while a < b:
+        if a&1: fn(a,x); a += 1
+        if b&1: b -= 1; fn(b,x)
+        a >>= 1; b >>= 1
+    _pull_paths(L,R)
+
+def range_add(l,r,x): _apply(l,r,x,_add)
+def range_set(l,r,x): _apply(l,r,x,_set)
+def add_value(i,x): range_add(i,i,x)
+def set_value(i,x): range_set(i,i,x)
+
+def query(l,r):
+    L,R = l+size,r+size+1
+    _push_paths(L,R)
+    left = right = IDENTITY
+    while L < R:
+        if L&1: left = combine(left,tree[L]); L += 1
+        if R&1: R -= 1; right = combine(tree[R],right)
+        L >>= 1; R >>= 1
+    return combine(left,right)
+\end{lstlisting}
+
+\end{minipage}%
+\hfill\vrule width 0.3pt\hfill%
+\begin{minipage}[t]{0.475\linewidth}
+\vspace{0pt}
+\raggedright
+
+\lazyhead{Configuration}
+
+{\fontsize{8.35}{9.7}\selectfont
+Set \lazycode{MODE} to \lazycode{"SUM"},
+\lazycode{"MIN"}, or \lazycode{"MAX"} before
+\lazycode{build(a)}. Rebuilding resets all lazy tags.
+
+\par\vspace{4pt}
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Mode} & \textbf{Combine} & \textbf{Neutral}\\
+\hline
+SUM & \lazycode{x+y} & 0\\
+MIN & \lazycode{min(x,y)} & $+\infty$\\
+MAX & \lazycode{max(x,y)} & $-\infty$\\
+\hline
+\end{tabular}
+}
+
+\lazyhead{Update Rules}
+
+{\fontsize{8.35}{9.7}\selectfont
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Mode} & \textbf{Add $x$} & \textbf{Set to $x$}\\
+\hline
+SUM & \lazycode{tree[p] += x * seg_len[p]} &
+      \lazycode{x * seg_len[p]}\\
+MIN/MAX & \lazycode{tree[p] += x} &
+          \lazycode{x}\\
+\hline
+\end{tabular}
+
+\par\vspace{3pt}
+\textbf{Priority:} SET overrides old additions.
+ADD after SET increases the pending set value.
+\lazycode{None} means no pending SET; zero is valid.
+}
+
+\lazyhead{Recognize These Problem Patterns}
+
+\lazypattern{1. Range Add + SUM}
+{Add $x$ to every element in $[l,r]$; query range sums.}
+{SUM mode; \lazycode{range_add(l,r,x)}, \lazycode{query(l,r)}.}
+
+\lazypattern{2. Range Set + SUM}
+{Assign all values in $[l,r]$ to $x$; query sums.}
+{SUM mode; \lazycode{range_set(l,r,x)}.}
+
+\lazypattern{3. Range Add/Set + MIN/MAX}
+{Apply updates to intervals; find minimum/maximum.}
+{Use MIN or MAX mode; same update/query functions.}
+
+\lazypattern{4. Overlapping Updates}
+{Several range additions and assignments overlap.}
+{Lazy tags preserve operation order; later SET overwrites
+old updates, later ADD increments pending SET.}
+
+\lazyhead{Quick Usage (SUM)}
+
+\begin{lstlisting}
+MODE = "SUM"
+build([1, 2, 3, 4])
+range_add(0, 3, 5)  # [6, 7, 8, 9]
+range_set(1, 2, 0)  # [6, 0, 0, 9]
+range_add(2, 3, 2)  # [6, 0, 2, 11]
+query(0, 3)        # 19
+set_value(0, 4)    # replace a[0]
+add_value(1, 3)    # add 3 to a[1]
+\end{lstlisting}
+
+\lazyhead{Important Notes}
+
+\begin{itemize}[
+  leftmargin=11pt,
+  topsep=0pt,
+  itemsep=2pt,
+  parsep=0pt
+]
+
+\item Valid range: $0\le l\le r<n$;
+endpoints inclusive.
+
+\item Internally use half-open $[L,R)$
+with \lazycode{R=r+size+1}.
+
+\item Push boundary paths \emph{before}
+applying/querying; pull affected ancestors
+\emph{after} updating.
+
+\item Range ADD / SET both $O(\log n)$;
+setting a point is just a length-one range update.
+
+\item Choose MODE before build;
+do not change it mid-operation.
+
+\end{itemize}
+
+\end{minipage}%
+\end{minipage}
+
+\endgroup
+
+
+
+% ============================================================
+% PAGE 7: SEGMENT TREE SEARCH (ITERATIVE)
+% ============================================================
+\clearpage
+\begingroup
+\lstset{
+  basicstyle=\ttfamily\fontsize{6.9}{7.5}\selectfont,
+  commentstyle=\color{black},
+  columns=fullflexible,
+  breaklines=false,
+  aboveskip=1pt,
+  belowskip=1pt
+}
+
+\newcommand{\searchhead}[1]{%
+  \par\vspace{5pt}\noindent
+  {\bfseries\fontsize{9.2}{11}\selectfont #1}%
+  \par\vspace{1pt}\hrule\vspace{3pt}
+}
+\newcommand{\searchcode}[1]{%
+  {\ttfamily\fontsize{7.1}{8.3}\selectfont\detokenize{#1}}%
+}
+\newcommand{\searchpattern}[3]{%
+  {\bfseries #1}\par
+  {\fontsize{8.35}{9.7}\selectfont
+  \textbf{Problem:} #2\par
+  \textbf{Approach:} #3\par}\vspace{3pt}
+}
+
+\subsection{Segment Tree Search --- Iterative}
+\vspace{2pt}
+{\small\textbf{0-based indexing.}
+Find first $\ge x$, $k$-th active, or first prefix sum $\ge x$.
+Build $O(n)$, search/update/query $O(\log n)$, space $O(n)$.}
+\par\vspace{4pt}
+\noindent
+
+% ============================================================
+% LEFT COLUMN: PYTHON CODE
+% ============================================================
+
+\begin{minipage}[t]{\textwidth}
+\begin{minipage}[t]{0.493\linewidth}
+\vspace{0pt}
+
+\begin{lstlisting}
+# Set MODE before building: SUM / MAX
+MODE = "SUM"
+
+def build(a):
+    global n,size,tree,combine,IDENTITY
+    n = len(a)
+    if not n: raise ValueError("Empty array")
+    if MODE == "SUM":
+        combine,IDENTITY = (lambda x,y:x+y),0
+    elif MODE == "MAX":
+        combine,IDENTITY = max,float('-inf')
+    else: raise ValueError("Invalid MODE")
+    size = 1 << (n-1).bit_length()
+    tree = [IDENTITY]*(2*size)
+    tree[size:size+n] = a
+    for p in range(size-1,0,-1):
+        tree[p] = combine(tree[2*p],tree[2*p+1])
+
+# Point replacement and addition
+def set_value(i,x):
+    p = i+size
+    tree[p] = x
+    while p > 1:
+        p >>= 1
+        tree[p] = combine(tree[2*p],tree[2*p+1])
+
+def add_value(i,x):
+    set_value(i,tree[size+i]+x)
+
+# Inclusive [l,r]: range SUM or MAX
+def query(l,r):
+    l += size; r += size
+    left = right = IDENTITY
+    while l <= r:
+        if l&1:
+            left = combine(left,tree[l]); l += 1
+        if not (r&1):
+            right = combine(tree[r],right); r -= 1
+        l >>= 1; r >>= 1
+    return combine(left,right)
+
+# MAX mode: first i >= start with a[i] >= x
+# Unsorted array is fine; -1 if absent
+def first_at_least(x,start=0):
+    if MODE != "MAX": raise ValueError("MAX only")
+    if start >= n: return -1
+    p = start+size
+    while True:
+        while p%2 == 0: p >>= 1
+        if tree[p] >= x:
+            while p < size:
+                p *= 2
+                if tree[p] < x: p += 1
+            i = p-size
+            return i if i < n else -1
+        p += 1
+        if (p & (p-1)) == 0: break
+    return -1
+
+# SUM mode: first prefix sum >= target
+# All values NON-NEGATIVE; target > 0
+def prefix_lower_bound(target):
+    if MODE != "SUM": raise ValueError("SUM only")
+    if target <= 0 or target > tree[1]:
+        return -1
+    p = 1
+    while p < size:
+        p *= 2
+        if tree[p] < target:
+            target -= tree[p]; p += 1
+    i = p-size
+    return i if i < n else -1
+
+# SUM mode: 1-based k, returns 0-based index
+# Requires non-negative integer frequencies
+def kth(k):
+    return prefix_lower_bound(k)
+\end{lstlisting}
+
+\end{minipage}%
+\hfill\vrule width 0.3pt\hfill%
+\begin{minipage}[t]{0.475\linewidth}
+\vspace{0pt}
+\raggedright
+
+\searchhead{Configuration and Searches}
+
+{\fontsize{8.35}{9.7}\selectfont
+Choose \searchcode{MODE} \emph{before} \searchcode{build(a)}.
+
+\par\vspace{2pt}
+\begin{tabular}{@{}lll@{}}
+\hline
+\textbf{Mode} & \textbf{Node stores} & \textbf{Use for}\\
+\hline
+MAX & Maximum & \searchcode{first_at_least}\\
+SUM & Sum & \searchcode{kth}, \searchcode{prefix_lower_bound}\\
+\hline
+\end{tabular}
+
+\par\vspace{3pt}
+Each search descends through the tree in $O(\log n)$;
+no repeated binary-search range queries.
+}
+
+\searchhead{Recognize These Problem Patterns}
+
+\searchpattern{1. First Element $\ge x$}
+{Update an unsorted array; find the first index $i\ge start$
+with \searchcode{a[i] >= x}.}
+{MAX mode. Skip nodes whose maximum is $<x$;
+descend to the leftmost qualifying leaf.}
+
+\searchpattern{2. $k$-th Remaining Element}
+{Repeatedly remove the $k$-th still-active item
+and report its original value.}
+{SUM mode. Build a tree of ones. Find \searchcode{pos=kth(k)},
+read \searchcode{a[pos]}, then \searchcode{set_value(pos,0)}.}
+
+\searchpattern{3. Prefix Sum Lower Bound}
+{Find first $i$ with $a_0+\cdots+a_i\ge x$.}
+{SUM mode with non-negative values. Go left if the left
+sum reaches $x$; otherwise subtract it and go right.}
+
+\searchpattern{4. $k$-th Smallest in a Multiset}
+{Insert/delete values with duplicates; find the $k$-th.}
+{SUM mode: leaves represent \emph{values}, and store frequencies.
+Use \searchcode{add_value(x,1/-1)} and \searchcode{kth(k)}.}
+
+\searchhead{Quick Usage Examples}
+
+\begin{lstlisting}
+# First >= 6 (MAX mode):
+MODE = "MAX"
+build([2, 4, 1, 8, 3, 7])
+first_at_least(6)       # 3
+first_at_least(6, 4)    # 5
+
+# K-th active (SUM mode, new build):
+MODE = "SUM"
+build([1, 0, 1, 1, 0, 1])
+kth(3)                  # 3
+set_value(3, 0)         # deactivate
+kth(3)                  # 5
+
+# Prefix lower bound (new build):
+build([2, 0, 3, 1])
+prefix_lower_bound(5)   # 2
+\end{lstlisting}
+
+\searchhead{Important Notes}
+
+\begin{itemize}[
+  leftmargin=11pt,
+  topsep=0pt,
+  itemsep=2pt,
+  parsep=0pt
+]
+
+\item Results are \textbf{0-based indices};
+$-1$ means not found.
+
+\item \searchcode{kth(k)} takes \textbf{1-based} $k$.
+
+\item SUM descent requires \textbf{non-negative}
+values; for $k$-th queries, use non-negative
+integer frequencies.
+
+\item \searchcode{prefix_lower_bound(x)} expects
+$x>0$; this template returns $-1$ for $x\le0$.
+
+\item MAX search does not require sorting.
+Never delete an absent value; compress large
+coordinates.
+
+\item Changing MODE requires rebuilding;
+only point updates.
+
+\end{itemize}
+
+\end{minipage}%
+\end{minipage}
+
+\endgroup
+
 
 \end{document}
