@@ -51,7 +51,7 @@
 % ---------- Code style: monochrome to save ink ----------
 \lstset{
   language=Python,
-  basicstyle=\ttfamily\footnotesize,
+  basicstyle=\ttfamily\fontsize{7.47}{8.94}\selectfont,
   keywordstyle=\bfseries,
   commentstyle=\itshape,
   stringstyle=\ttfamily,
@@ -70,7 +70,17 @@
 \newcommand{\code}[1]{\texttt{#1}}
 
 \begin{document}
-\small
+% First reference chapters: larger print, natural page-flow.
+\begingroup
+\titleformat{\section}{\fontsize{11.8}{13.9}\selectfont\bfseries}{}{0pt}{}[\vspace{-1pt}\hrule]
+\titleformat{\subsection}{\fontsize{10.5}{12.5}\selectfont\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{5pt}{3pt}
+\titlespacing*{\subsection}{0pt}{3pt}{2pt}
+\lstset{basicstyle=\ttfamily\fontsize{8.9}{10.8}\selectfont,
+        columns=fullflexible,breaklines=true,breakatwhitespace=true,
+        aboveskip=2pt,belowskip=2pt}
+
+\fontsize{10.3}{12.4}\selectfont
 
 \begin{center}
 {\large\bfseries Python Competitive Programming Reference}\\[-2pt]
@@ -96,7 +106,9 @@ print(f"{answer:.2f}")
 
 # Read entire input as integers
 import sys
-data = list(map(int, sys.stdin.buffer.read().split()))
+data = list(map(
+    int, sys.stdin.buffer.read().split()
+))
 
 # Read entire input as strings
 words = sys.stdin.buffer.read().split()
@@ -117,6 +129,18 @@ D = defaultdict(d.default_factory,
                        key=lambda kv: kv[1]))
 \end{lstlisting}
 
+
+% ============================================================
+\section{Common Contest Terminology}
+
+Let $A=[1,2,3,4]$ and $S=\texttt{abcd}$.
+
+\textbf{Subarray:} Contiguous elements of an array, e.g. \code{[2,3]} from $A$.\par
+\textbf{Subsequence:} Keep original relative order; skipping is allowed, e.g. \code{[1,3,4]} from $A$.\par
+\textbf{Subset:} Choose elements without caring about order, e.g. $\{1,4\}$ from $A$.\par
+\textbf{Substring:} Contiguous characters of a string, e.g. \code{"bc"} from $S$.\par
+
+\textit{Remember:} Every subarray is a subsequence. The whole object qualifies; whether empty selections count depends on the problem statement.
 
 % ============================================================
 \section{Modular Arithmetic}
@@ -216,6 +240,129 @@ print(ans)
 \end{lstlisting}
 
 \textbf{Requirement:} \code{check(x)} must be monotonic over the search interval.
+
+% ============================================================
+\section{Array Techniques}
+
+\subsection{Prefix Sum --- Static Range Sum}
+0-based, inclusive $[l,r]$. Build $O(n)$, each query $O(1)$; no point updates.
+\begin{lstlisting}
+a = [2, 4, 1, 5, 3]
+pref = [0]
+for x in a:
+    pref.append(pref[-1] + x)
+
+def range_sum(l, r):
+    return pref[r + 1] - pref[l]
+
+# range_sum(1, 3) == 10
+\end{lstlisting}
+
+\subsection{Difference Array --- Offline Range Add}
+0-based, inclusive $[l,r]$. Each update $O(1)$, all final values $O(n)$. Apply updates before reading results.
+\begin{lstlisting}
+a = [1, 2, 3, 4, 5]
+n = len(a)
+diff = [0] * (n + 1)
+
+def range_add(l, r, x):
+    diff[l] += x
+    diff[r + 1] -= x
+
+range_add(1, 3, 5)
+range_add(2, 4, 2)
+cur = 0
+for i in range(n):
+    cur += diff[i]
+    a[i] += cur
+# a == [1, 7, 10, 11, 7]
+\end{lstlisting}
+
+\subsection{Two Pointers --- Pair Sum}
+Sorted input required. $O(n)$ scan after sorting ($O(n\log n)$ if unsorted). Indices refer to the sorted array.
+\begin{lstlisting}
+def two_sum_sorted(a, target):
+    l, r = 0, len(a) - 1
+    while l < r:
+        s = a[l] + a[r]
+        if s == target:
+            return l, r
+        if s < target:
+            l += 1
+        else:
+            r -= 1
+    return None
+
+# two_sum_sorted([1,2,4,7,11],9) == (1,3)
+\end{lstlisting}
+
+\subsection{Sliding Window --- Fixed Size}
+Maximum sum of a contiguous length-$k$ subarray, $O(n)$, including negative values; $1\le k\le n$.
+\begin{lstlisting}
+def max_k_window(a, k):
+    window = sum(a[:k])
+    best = window
+    for r in range(k, len(a)):
+        window += a[r] - a[r - k]
+        best = max(best, window)
+    return best
+
+# max_k_window([2,-1,3,4,-2],3) == 6
+\end{lstlisting}
+
+\subsection{Kadane --- Maximum Subarray Sum}
+Maximum sum of a \emph{non-empty contiguous} subarray. $O(n)$ time, $O(1)$ extra space; works for all-negative arrays.
+\begin{lstlisting}
+def kadane(a):
+    cur = best = a[0]
+    for x in a[1:]:
+        cur = max(x, cur + x)
+        best = max(best, cur)
+    return best
+
+# kadane([-2,1,-3,4,-1,2,1,-5,4]) == 6
+\end{lstlisting}
+
+% ============================================================
+\section{Bit Manipulation Basics \& XOR}
+
+\subsection{Basic Bit Operations}
+Assume $x\ge0$; bit position $k$ is 0-based from the right.
+\begin{lstlisting}
+x & 1                    # Odd (1) / even (0)
+(x >> k) & 1             # Check bit k
+x | (1 << k)             # Set bit k
+x & ~(1 << k)            # Clear bit k
+x ^ (1 << k)             # Toggle bit k
+x.bit_count()            # Count 1-bits
+x.bit_length()           # Number of bits
+x & -x                  # Lowest set bit
+x & (x - 1)             # Clear lowest set bit
+x > 0 and (x & (x-1)) == 0  # Power of 2
+\end{lstlisting}
+In Python, \code{\string~x} is negative for non-negative $x$; mask off unwanted higher bits when using NOT.
+
+\subsection{XOR Properties and Range XOR}
+\begin{lstlisting}
+# a ^ a = 0; a ^ 0 = a; a ^ b ^ a = b
+
+# XOR of integers from 0 through n
+def xor_upto(n):
+    if n < 0:
+        return 0
+    return (n, 1, n + 1, 0)[n % 4]
+
+# XOR of integers in [l, r], 0 <= l <= r
+def xor_range(l, r):
+    return xor_upto(r) ^ xor_upto(l - 1)
+
+# Exactly one value occurs once, all others twice
+a = [4, 1, 2, 1, 2]
+ans = 0
+for x in a:
+    ans ^= x
+# ans == 4
+\end{lstlisting}
 
 % ============================================================
 \section{Number Theory}
@@ -387,8 +534,10 @@ def bin_exp(a, b, mod=None):
     res = 1
     while b:
         if b & 1:
-            res = res * a if mod is None else res * a % mod
-        a = a * a if mod is None else a * a % mod
+            res = (res * a if mod is None
+                   else res * a % mod)
+        a = (a * a if mod is None
+             else a * a % mod)
         b >>= 1
     return res
 
@@ -401,7 +550,8 @@ def bin_exp(a, b, mod=None):
 def is_prime_mr(n):
     if n < 2:
         return False
-    small = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
+    small = (2, 3, 5, 7, 11, 13, 17,
+             19, 23, 29, 31, 37)
     for p in small:
         if n % p == 0:
             return n == p
@@ -446,7 +596,8 @@ for i in range(MAXN, 0, -1):
 def nCr(n, r):
     if r < 0 or r > n:
         return 0
-    return fact[n] * inv_fact[r] % MOD * inv_fact[n-r] % MOD
+    return (fact[n] * inv_fact[r] % MOD
+            * inv_fact[n-r] % MOD)
 \end{lstlisting}
 
 % ============================================================
@@ -470,7 +621,8 @@ Clamp the cosine to $[-1,1]$ if floating-point error is possible.
 \subsection{Polygon Area --- Shoelace Formula}
 \begin{lstlisting}
 def polygon_area2(points):
-    # Returns twice the area; exact for integer coordinates.
+    # Returns twice the area.
+    # Exact for integer coordinates.
     area2 = 0
     n = len(points)
     for i in range(n):
@@ -484,6 +636,54 @@ def polygon_area2(points):
 
 % ============================================================
 \section{Graph Algorithms}
+
+\subsection{BFS --- Unweighted Shortest Paths}
+1-indexed adjacency list: \code{graph[u] = [v,...]}. $O(V+E)$ time. \code{dist[v] = -1} means unreachable; \code{par} works with \code{restore\_path} below.
+\begin{lstlisting}
+from collections import deque
+
+def bfs(n, graph, src=1):
+    dist = [-1] * (n + 1)
+    par = [-1] * (n + 1)
+    dist[src] = 0
+    q = deque([src])
+    while q:
+        u = q.popleft()
+        for v in graph[u]:
+            if dist[v] != -1:
+                continue
+            dist[v] = dist[u] + 1
+            par[v] = u
+            q.append(v)
+    return dist, par
+\end{lstlisting}
+For non-negative weighted edges, use Dijkstra instead.
+
+\subsection{Bipartite Graph --- BFS 2-Coloring}
+Undirected graph, 1-based adjacency list. $O(V+E)$ time and $O(V)$ space. Colors: \code{-1} = unvisited; \code{0} and \code{1} = groups.
+\begin{lstlisting}
+from collections import deque
+
+def is_bipartite(n, graph):
+    color = [-1] * (n + 1)
+
+    for start in range(1, n + 1):
+        if color[start] != -1:
+            continue
+        color[start] = 0
+        q = deque([start])
+
+        while q:
+            u = q.popleft()
+            for v in graph[u]:
+                if color[v] == -1:
+                    color[v] = 1 - color[u]
+                    q.append(v)
+                elif color[v] == color[u]:
+                    return False
+    return True
+\end{lstlisting}
+Bipartite iff no odd-length cycle. Every tree is bipartite. Checks disconnected graphs and rejects self-loops.
 
 \subsection{Iterative DFS with Traversal Depth}
 For a tree this is depth from \code{start}; in a general graph it is DFS-tree depth.
@@ -591,7 +791,8 @@ def topo_sort(graph, n):
             if indeg[v] == 0:
                 q.append(v)
 
-    return order if len(order) == n else []  # [] => cycle
+    # [] means a directed cycle exists.
+    return order if len(order) == n else []
 \end{lstlisting}
 
 % ============================================================
@@ -630,19 +831,18 @@ def union(u, v):
 \end{lstlisting}
 
 % ============================================================
-% FENWICK TREE — V2 UPDATED SECTION
+% FENWICK TREE — EXPANDED, SOURCE-MATCHED REFERENCE
+% Source: code/06_data_structures/fenwick_tree.py (GitHub main)
+% Only this Fenwick block is expanded; other algorithms are unchanged.
 % ============================================================
-% Dedicated full-width page with compact code and notes.
-% Other sections retain their original code.
-
 \end{multicols}
-\clearpage
+\endgroup
 
+\clearpage
 \begingroup
 
-% Compact code style only for Fenwick Tree
 \lstset{
-  basicstyle=\ttfamily\fontsize{7.75}{9.3}\selectfont,
+  basicstyle=\ttfamily\fontsize{9.3}{10.95}\selectfont,
   commentstyle=\color{black},
   columns=fullflexible,
   breaklines=true,
@@ -652,47 +852,37 @@ def union(u, v):
 }
 
 \newcommand{\bithead}[1]{%
-  \par\vspace{5pt}\noindent
-  {\bfseries\fontsize{9.5}{11}\selectfont #1}%
+  \par\vspace{7pt}\noindent
+  {\bfseries\fontsize{11.4}{13.5}\selectfont #1}%
   \par\vspace{1pt}\hrule\vspace{3pt}
 }
-
 \newcommand{\bitcode}[1]{%
-  {\ttfamily\fontsize{7.2}{8.5}\selectfont\detokenize{#1}}%
+  {\ttfamily\fontsize{9.05}{10.85}\selectfont\detokenize{#1}}%
 }
-
-\newcommand{\bitpattern}[3]{%
-  {\bfseries #1}\par
-  {\fontsize{8.4}{9.8}\selectfont
-    \textbf{Problem:} #2\par
-    \textbf{Approach:} #3\par
-  }\vspace{3pt}
+\newcommand{\bittext}[1]{%
+  \begingroup\raggedright\fontsize{10.4}{12.35}\selectfont #1\par\endgroup%
+}
+\newcommand{\bitproblem}[2]{%
+  \bithead{#1}%
+  \bittext{#2}%
 }
 
 \subsection{Fenwick Tree / Binary Indexed Tree}
-
 \vspace{2pt}
-
-{\small
-\textbf{1-based indexing.}
-Build $O(N)$, point update and prefix/range queries
-$O(\log N)$, space $O(N)$.
-}
-
-\vspace{4pt}
-
-\noindent
-\begin{minipage}[t]{0.493\textwidth}
-\vspace{0pt}
-
-\bithead{Fenwick Tree / Binary Indexed Tree}
-
+{\fontsize{10.3}{12.4}\selectfont\textbf{1-based indices} $1\ldots N$.
+Build $O(N)$; point update and prefix/range query $O(\log N)$;
+space $O(N)$. \textbf{Three interpretations:}
+values by position, frequencies by value, or active flags by position.\par}
+\vspace{5pt}
+\begin{multicols}{2}
+\bithead{Complete SUM Fenwick Code}
 \begin{lstlisting}
 N = 200005
 bit = [0] * (N + 1)
 arr = [0] * (N + 1)
 
-# Build from a 0-indexed list, O(N)
+# Build from a 0-indexed Python list; O(N).
+# Resets the old BIT (don't reinsert values).
 def build(values):
     if len(values) > N:
         raise ValueError("Too many values")
@@ -706,15 +896,14 @@ def build(values):
         if j <= N:
             bit[j] += bit[i]
 
-# Add val at position i
-# (does not replace it)
+# Add val at 1-based index i; NOT replace.
 def update(i, val):
     arr[i] += val
     while i <= N:
         bit[i] += val
         i += i & -i
 
-# Prefix sum [1, i]
+# Inclusive prefix sum [1, i].
 def query(i):
     ans = 0
     while i > 0:
@@ -722,16 +911,16 @@ def query(i):
         i -= i & -i
     return ans
 
-# Inclusive range sum [l, r]
+# Inclusive sum over [l, r].
 def range_query(l, r):
     return query(r) - query(l - 1)
 
-# Replace arr[i] with val
+# Replace value at i (not add).
 def set_value(i, val):
     update(i, val - arr[i])
 
-# First index i with query(i) >= k
-# Needs non-negative frequencies
+# First index i with query(i) >= k.
+# Values must be non-negative for kth().
 def kth(k):
     if k <= 0 or k > query(N):
         return -1
@@ -745,129 +934,209 @@ def kth(k):
         step >>= 1
     return i + 1
 \end{lstlisting}
+\columnbreak
+\bithead{What Each Operation Means}
+\bittext{\textbf{\bitcode{build(values)}}: reads an ordinary
+0-indexed Python list and stores its elements at BIT indices
+$1,2,\dots$. Resets previous state.}
+\bittext{\textbf{\bitcode{update(i,x)}}: adds $x$ to position
+$i$. For frequency mode, $x=1$ inserts one occurrence;
+$x=-1$ removes one occurrence.}
+\bittext{\textbf{\bitcode{query(i)}}: sum from position
+$1$ through $i$. With frequencies, it counts occurrences
+with values $\le i$.}
+\bittext{\textbf{\bitcode{range_query(l,r)}}:
+\bitcode{query(r)-query(l-1)}; inclusive ends. In frequency
+mode, counts values in $[l,r]$, not array indices.}
+\bittext{\textbf{\bitcode{set_value(i,x)}}: replaces the
+stored value, using \bitcode{update(i,x-arr[i])}. Never
+modify \bitcode{arr[i]} directly.}
+\bittext{\textbf{\bitcode{kth(k)}}: first BIT index whose
+prefix sum reaches $k$. In frequency mode it is the $k$-th
+smallest value; in active-position mode it is the $k$-th
+remaining original position. Returns $-1$ when invalid.}
 
-\bithead{Initialize}
-
+\bithead{Quick Start (Fresh Tree)}
 \begin{lstlisting}
-# Build once from an existing array:
 build([2, 4, 1, 5, 3])
-# Or start empty and call update(i, x)
+query(3)           # 7
+range_query(2, 4)  # 10
+update(3, 5)       # a[3]: 1 -> 6
+range_query(2, 4)  # 15
+set_value(2, 10)   # a[2]: 4 -> 10
+query(3)           # 18
 \end{lstlisting}
+
+\bithead{Important Constraints}
+{\fontsize{10.4}{12.35}\selectfont
+\begin{itemize}[leftmargin=11pt,topsep=0pt,itemsep=1pt,parsep=0pt]
+  \item Valid update indices: $1\le i\le N$;
+  \textbf{never call} \bitcode{update(0,x)}.
+  \item \bitcode{kth(k)} requires \textbf{non-negative}
+  stored values and $1\le k\le$ \bitcode{query(N)}.
+  \item Deleting an absent value makes its frequency
+  negative: do not do this.
+  \item A new independent example needs \bitcode{build([])}
+  (empty BIT) or \bitcode{build(values)} (fresh initial state).
+  \item Value-indexed frequencies require positive integer
+  values $\le N$; compress large or negative coordinates.
+\end{itemize}
+}
+
+\bithead{SUM $\rightarrow$ XOR Customization}
+{\fontsize{10.2}{12.2}\selectfont
+Replace the aggregate operations; the loops stay the same.
+\par\vspace{2pt}
+\renewcommand{\arraystretch}{1.07}
+\begin{tabular}{@{}ll@{}}
+\hline
+\textbf{Function} & \textbf{Replacement} \\
+\hline
+\bitcode{build} & \bitcode{bit[j] ^= bit[i]} \\
+\bitcode{update} & \bitcode{arr[i] ^= val; bit[i] ^= val} \\
+\bitcode{query} & \bitcode{ans ^= bit[i]} \\
+\bitcode{range_query} & \bitcode{query(r) ^ query(l-1)} \\
+\bitcode{set_value} & \bitcode{update(i,val ^ arr[i])} \\
+\hline
+\end{tabular}
+\par\textbf{XOR note:} \bitcode{kth()} is \textbf{not valid} in XOR mode.
+}
+
+
+\end{multicols}
+
+\clearpage
+% Slightly larger type on the example page for print legibility.
+\lstset{basicstyle=\ttfamily\fontsize{8.95}{10.77}\selectfont}
+\renewcommand{\bittext}[1]{%
+  \begingroup\raggedright\fontsize{9.65}{11.92}\selectfont #1\par\endgroup%
+}
+\subsection{Fenwick Tree — Worked Problem Patterns}
+\vspace{1pt}
+{\small\textbf{Read the representation before choosing a function.}
+Every block below assumes the SUM Fenwick code on the previous page.
+Examples are independent; \bitcode{build()} resets the tree.}\par
+\vspace{5pt}
+\noindent
+\begin{minipage}[t]{0.493\textwidth}
+\vspace{0pt}
+
+\bitproblem{1. Dynamic Range Sum (by Position)}{
+\textbf{Problem:} Given an array, handle point additions,
+point assignments, and sum queries over inclusive indices $[l,r]$.
+\textbf{Representation:} BIT index = original \emph{position};
+BIT value = number stored there.}
+\begin{lstlisting}
+a = [2, 4, 1, 5, 3]
+build(a)               # 1-based BIT
+query(3)               # 7
+range_query(2, 4)      # 10
+update(3, 5)           # add 5 to position 3
+range_query(2, 4)      # 15
+set_value(2, 10)       # replace position 2
+query(3)               # 18
+\end{lstlisting}
+\bittext{\textbf{Choose:} \bitcode{update(i,x)} to add;
+\bitcode{set_value(i,x)} to replace;
+\bitcode{range_query(l,r)} for sum. Build $O(N)$,
+then each operation $O(\log N)$.}
+
+\bitproblem{2. K-th Smallest in a Multiset}{
+\textbf{Problem:} Insert/delete integer values (duplicates allowed),
+find the $k$-th smallest, or count elements $\le x$.
+\textbf{Representation:} BIT index = \emph{number value};
+BIT value = its \emph{frequency}. Duplicates count separately.}
+\begin{lstlisting}
+build([])                # empty multiset
+for x in [5, 2, 8, 2, 6]:
+    update(x, 1)         # insert each value
+# sorted multiset: [2, 2, 5, 6, 8]
+kth(3)                  # 5
+query(5)                # 3 values <= 5
+update(2, -1)           # delete ONE 2
+# now: [2, 5, 6, 8]
+kth(3)                  # 6
+\end{lstlisting}
+\bittext{\textbf{Requirements:} Frequencies must remain
+non-negative. Values must be integers in $[1,N]$;
+coordinate compression is needed for very large, negative,
+or arbitrary integer values. $O(\log N)$ per operation.}
+
+\bithead{Why \bitcode{kth(k)} Works}
+\bittext{For a frequency BIT, \bitcode{query(i)} counts all
+elements $\le i$. So \bitcode{kth(k)} returns the smallest
+$i$ with \bitcode{query(i) >= k}. For active flags,
+that same $i$ is the original position of the $k$-th
+still-present element.}
 
 \end{minipage}%
 \hfill\vrule width 0.3pt\hfill
 \begin{minipage}[t]{0.475\textwidth}
-\vspace{0pt}
-\raggedright
+\vspace{0pt}\raggedright
 
-\bithead{Recognize These Problem Patterns}
-
-\bitpattern{1. Dynamic Range Sum}
-{Given an array, support point additions/assignments
-and sum queries over $[l,r]$.}
-{Store values by position. Use
-\bitcode{update(i,x)},
-\bitcode{set_value(i,x)}, and
-\bitcode{range_query(l,r)}.}
-
-\bitpattern{2. K-th Smallest in a Multiset}
-{Insert/delete integer values (including duplicates)
-and find the $k$-th smallest.}
-{Store frequencies at value indices.
-Insert: \bitcode{update(x,1)};
-delete: \bitcode{update(x,-1)};
-answer: \bitcode{kth(k)}.}
-
-\bitpattern{3. K-th Remaining Element}
-{Given an unsorted array, repeatedly remove and
-print the $k$-th still-active element
-(CSES List Removals).}
-{Store 1 for active original positions and 0
-for removed ones:
-\bitcode{build([1]*n)},
-\bitcode{pos=kth(k)},
-print \bitcode{a[pos-1]},
-then \bitcode{update(pos,-1)}.}
-
-\bitpattern{4. Count Values in a Range}
-{Maintain a multiset and count how many
-values lie in $[l,r]$.}
-{Store frequencies by value and use
-\bitcode{range_query(l,r)} to count occurrences.}
-
-\bithead{Quick Usage Examples}
-
+\bitproblem{3. K-th Remaining Element (by Position)}{
+\textbf{Problem:} An unsorted array is given with removal
+queries. Each query $k$ removes and prints the $k$-th
+\emph{remaining} element in original order (CSES List Removals).
+\textbf{Representation:} BIT index = \emph{original position};
+BIT value = $1$ if still active, $0$ if removed.}
 \begin{lstlisting}
-# Normal range sum:
-build([2, 4, 1, 5, 3])
-range_query(2, 4)  # 10
-update(3, 5)       # add 5
-range_query(2, 4)  # 15
-set_value(2, 10)   # replace index 2
-
-# CSES List Removals (fresh tree):
 a = [2, 6, 1, 4, 2]
 removals = [3, 1, 3, 1, 1]
-build([1] * len(a))
+build([1] * len(a))       # all positions active
 ans = []
 for k in removals:
-    pos = kth(k)
-    ans.append(a[pos - 1])
-    update(pos, -1)
-# ans: [1, 2, 2, 6, 4]
+    pos = kth(k)          # original 1-based index
+    ans.append(a[pos-1])  # read original value
+    update(pos, -1)       # active 1 -> 0
+print(*ans)              # 1 2 2 6 4
 \end{lstlisting}
+\bittext{\textbf{Key detail:} \bitcode{a} never changes;
+\bitcode{update(pos,-1)} only marks that position as
+removed. \bitcode{a[pos-1]} converts the BIT's 1-based
+position to Python's 0-based index. Each removal
+$O(\log N)$. No coordinate compression is needed, even
+when array values are huge or negative.}
 
-\bithead{SUM $\rightarrow$ XOR Customization}
+\bitproblem{4. Count Values in a Range}{
+\textbf{Problem:} Maintain a collection with insertions,
+deletions, and queries asking how many values are in
+$[l,r]$ inclusive, \emph{not} how many array positions
+lie in that interval.
+\textbf{Representation:} BIT index = \emph{number value};
+BIT value = its frequency.}
+\begin{lstlisting}
+build([])                # empty frequency BIT
+for x in [2, 2, 5, 6, 8]:
+    update(x, 1)
+range_query(2, 5)       # 3 (2, 2, 5)
+range_query(6, 8)       # 2 (6, 8)
+update(5, 1)           # insert another 5
+range_query(2, 5)       # 4
+\end{lstlisting}
+\bittext{\textbf{Reason:} \bitcode{range_query(l,r)} equals
+\bitcode{query(r)-query(l-1)}; for a frequency BIT this
+counts values, including duplicates, in the range.
+Each insertion/deletion/query $O(\log N)$. Value range
+must fit $[1,N]$ or be compressed first.}
 
-{\fontsize{8.4}{9.8}\selectfont
-Replace the following operations; the loops stay unchanged.
-
-\par\vspace{2pt}
-\renewcommand{\arraystretch}{1.1}
-
-\begin{tabular}{@{}ll@{}}
+\bithead{Choose the Correct Representation}
+\vspace{1pt}
+{\fontsize{9.05}{10.62}\selectfont
+\renewcommand{\arraystretch}{1.08}
+\begin{tabular}{@{}p{0.40\linewidth}p{0.53\linewidth}@{}}
 \hline
-\textbf{Function} & \textbf{Change} \\
+\textbf{Problem} & \textbf{BIT stores} \\
 \hline
-\bitcode{build} & \bitcode{bit[j] ^= bit[i]} \\
-\bitcode{update} & \bitcode{arr[i] ^= val}, \bitcode{bit[i] ^= val} \\
-\bitcode{query} & \bitcode{ans ^= bit[i]} \\
-\bitcode{range_query} & \bitcode{query(r) ^ query(l-1)} \\
-\bitcode{set_value} & \bitcode{update(i, val ^ arr[i])} \\
+Dynamic range sum & Values at positions \\
+K-th smallest & Frequencies by value \\
+K-th remaining & Active flags by position \\
+Count values in range & Frequencies by value \\
 \hline
 \end{tabular}
-
-\par\vspace{2pt}
-\textbf{Note:} \bitcode{kth(k)} is not supported in XOR mode.
 }
 
-\bithead{Important Notes}
-
-\begin{itemize}[
-  leftmargin=11pt,
-  topsep=0pt,
-  itemsep=1pt,
-  parsep=0pt
-]
-\item Indices: $1\le i\le N$.
-Never call \bitcode{update(0,x)}.
-
-\item \bitcode{update(i,x)} adds;
-\bitcode{set_value(i,x)} replaces.
-
-\item \bitcode{kth(k)} finds the first index
-whose prefix sum is $\ge k$.
-Values must be non-negative.
-
-\item For frequency queries, never delete
-an absent value. Compress large/negative
-value coordinates.
-
-\item Reset the tree between independent examples.
-\end{itemize}
-
 \end{minipage}
-
 \endgroup
 
 
@@ -878,7 +1147,7 @@ value coordinates.
 \begingroup
 
 \lstset{
-  basicstyle=\ttfamily\fontsize{7.75}{9.3}\selectfont,
+  basicstyle=\ttfamily\fontsize{8.65}{10.22}\selectfont,
   commentstyle=\color{black},
   columns=fullflexible,
   breaklines=true,
@@ -889,18 +1158,18 @@ value coordinates.
 
 \newcommand{\seghead}[1]{%
   \par\vspace{5pt}\noindent
-  {\bfseries\fontsize{9.5}{11}\selectfont #1}%
+  {\bfseries\fontsize{10.4}{12.22}\selectfont #1}%
   \par\vspace{1pt}\hrule\vspace{3pt}
 }
 
 \newcommand{\segcode}[1]{%
-  {\ttfamily\fontsize{7.15}{8.5}\selectfont
+  {\ttfamily\fontsize{8}{9.52}\selectfont
    \detokenize{#1}}%
 }
 
 \newcommand{\segpattern}[3]{%
   {\bfseries #1}\par
-  {\fontsize{8.4}{9.8}\selectfont
+  {\fontsize{9.25}{10.82}\selectfont
     \textbf{Problem:} #2\par
     \textbf{Approach:} #3\par
   }\vspace{3pt}
@@ -1003,7 +1272,7 @@ seg_query(tree, size, 1, 4)  # 1
 
 \seghead{Customize: \segcode{combine} + \segcode{IDENTITY}}
 
-{\fontsize{8.4}{9.8}\selectfont
+{\fontsize{9.25}{10.82}\selectfont
 Change \textbf{both} lines \emph{before}
 \segcode{seg_build(arr)}.
 The rest of the template stays the same.
@@ -1105,13 +1374,134 @@ For range updates use a
 \endgroup
 
 
+
+% ============================================================
+% NEW: BASIC SEGMENT TREE -- SOURCE-MATCHED WORKED EXAMPLES
+% Source: code/06_data_structures/Segment_Tree.py (GitHub main)
+% ============================================================
+\clearpage
+\begingroup
+\lstset{basicstyle=\ttfamily\fontsize{9.95}{11.82}\selectfont,
+ commentstyle=\color{black},columns=fullflexible,breaklines=true,
+ breakatwhitespace=true,aboveskip=2pt,belowskip=2pt}
+\newcommand{\eghead}[1]{\par\vspace{5pt}\noindent
+ {\bfseries\fontsize{11.3}{13.42}\selectfont #1}\par\vspace{1pt}\hrule\vspace{3pt}}
+\newcommand{\egbody}[1]{\begingroup\raggedright
+ \fontsize{10.7}{13.22}\selectfont #1\par\endgroup}
+\newcommand{\egcode}[1]{{\ttfamily\fontsize{9.35}{11.07}\selectfont\detokenize{#1}}}
+\subsection{Basic Segment Tree — Worked Problem Patterns}
+{\small\textbf{Always choose combine and IDENTITY before seg\_build().}
+ Each example below is independent and assumes the basic Segment Tree functions
+ on the preceding page. External indices are 0-based; $[l,r]$ is inclusive.}\par\vspace{5pt}
+\noindent
+\begin{minipage}[t]{0.493\textwidth}\vspace{0pt}
+\eghead{1. Dynamic Range Sum}
+\egbody{\textbf{Problem:} Assign/add at one index and query sums over
+ $[l,r]$. Each tree node stores its segment sum. Use SUM configuration.}
+\begin{lstlisting}
+combine = lambda a, b: a + b
+IDENTITY = 0
+tree, size = seg_build([2, 4, 1, 5, 3])
+seg_query(tree, size, 1, 3)   # 10
+seg_update(tree, size, 2, 7) # set a[2]=7
+seg_query(tree, size, 1, 3)   # 16
+seg_add(tree, size, 1, 3)    # add 3 to a[1]
+seg_query(tree, size, 1, 3)   # 19
+\end{lstlisting}
+\egbody{\textbf{Typical problem:} CSES Dynamic Range Sum Queries.
+ Updates and queries cost $O(\log n)$.}
+
+\eghead{2. Dynamic Range Minimum / Maximum}
+\egbody{\textbf{Problem:} Replace/add at one index; ask for the
+ smallest/largest value in a subarray. Set \egcode{min/+inf} or
+ \egcode{max/-inf} \emph{before building}.}
+\begin{lstlisting}
+combine = min
+IDENTITY = float('inf')
+tree, size = seg_build([8, 3, 5, 1, 6])
+seg_query(tree, size, 1, 4)   # 1
+seg_update(tree, size, 3, 9) # a[3]: 1 -> 9
+seg_query(tree, size, 1, 4)   # 3
+seg_add(tree, size, 1, -2)   # a[1]: 3 -> 1
+seg_query(tree, size, 1, 4)   # 1
+\end{lstlisting}
+\egbody{\textbf{Typical problem:} CSES Dynamic Range Minimum Queries.}
+
+\eghead{3. Dynamic Range GCD}
+\egbody{\textbf{Problem:} Point assignment and GCD over $[l,r]$.
+ GCD is associative and \egcode{gcd(x,0)=x}.}
+\begin{lstlisting}
+from math import gcd
+combine = gcd
+IDENTITY = 0
+tree, size = seg_build([12, 18, 6, 15])
+seg_query(tree, size, 0, 2)   # 6
+seg_update(tree, size, 2, 9)
+seg_query(tree, size, 0, 2)   # 3
+\end{lstlisting}
+\end{minipage}%
+\hfill\vrule width 0.3pt\hfill%
+\begin{minipage}[t]{0.475\textwidth}\vspace{0pt}\raggedright
+\eghead{4. Dynamic Range XOR}
+\egbody{\textbf{Problem:} Point assignment, XOR across $[l,r]$.
+ XOR identity is $0$; changing one leaf recalculates its ancestors.}
+\begin{lstlisting}
+combine = lambda a, b: a ^ b
+IDENTITY = 0
+tree, size = seg_build([1, 2, 3, 4])
+seg_query(tree, size, 0, 2)   # 0
+seg_update(tree, size, 2, 7)
+seg_query(tree, size, 0, 2)   # 4
+\end{lstlisting}
+
+\eghead{5. Range Bitwise AND / OR}
+\egbody{\textbf{Problem:} Update a single value, answer AND/OR over
+ $[l,r]$. \egcode{-1} is the all-ones identity for Python integer AND;
+ \egcode{0} is the identity for OR.}
+\begin{lstlisting}
+a = [6, 3, 5]
+combine = lambda a, b: a & b
+IDENTITY = -1
+tree, size = seg_build(a)
+seg_query(tree, size, 0, 2)  # 0
+
+combine = lambda a, b: a | b
+IDENTITY = 0
+tree, size = seg_build(a)     # rebuild!
+seg_query(tree, size, 0, 2)  # 7
+\end{lstlisting}
+
+\eghead{What Each Function Does}
+\egbody{\textbf{\egcode{seg_build(a)}}: Fill power-of-two-sized leaves with
+ the original array and pad with the identity; compute parents; return
+ \egcode{tree,size}. $O(n)$.}
+\egbody{\textbf{\egcode{seg_query(tree,size,l,r)}}: Combine nodes
+ covering inclusive $[l,r]$. Two accumulators preserve operation order.
+ $O(\log n)$.}
+\egbody{\textbf{\egcode{seg_update(tree,size,i,x)}}: \emph{replace}
+ \egcode{a[i]} by $x$; recalculate its ancestors. $O(\log n)$.}
+\egbody{\textbf{\egcode{seg_add(tree,size,i,x)}}: \emph{add} $x$ to
+ the value at $i$, even in MIN/MAX/GCD/XOR modes; recalculate. $O(\log n)$.}
+
+\eghead{Contest Safety Checklist}
+\egbody{\textbullet\ Valid array is non-empty; valid original indices
+ $0\le l\le r<n$.\quad
+ \textbullet\ The combine operation must be \emph{associative} and the
+ identity neutral on both sides.\quad
+ \textbullet\ Changing combine or
+ identity requires rebuilding.\quad
+ \textbullet\ No $O(\log n)$ range
+ updates here: use Lazy Segment Tree.}
+\end{minipage}
+\endgroup
+
 % ============================================================
 % PAGE 6: LAZY SEGMENT TREE (ITERATIVE)
 % ============================================================
 \clearpage
 \begingroup
 \lstset{
-  basicstyle=\ttfamily\fontsize{7.5}{8.45}\selectfont,
+  basicstyle=\ttfamily\fontsize{7.9}{8.87}\selectfont,
   commentstyle=\color{black},
   columns=fullflexible,
   breaklines=false,
@@ -1121,15 +1511,15 @@ For range updates use a
 
 \newcommand{\lazyhead}[1]{%
   \par\vspace{5pt}\noindent
-  {\bfseries\fontsize{9.2}{11}\selectfont #1}%
+  {\bfseries\fontsize{9.6}{11.62}\selectfont #1}%
   \par\vspace{1pt}\hrule\vspace{3pt}
 }
 \newcommand{\lazycode}[1]{%
-  {\ttfamily\fontsize{7.1}{8.3}\selectfont\detokenize{#1}}%
+  {\ttfamily\fontsize{7.45}{8.72}\selectfont\detokenize{#1}}%
 }
 \newcommand{\lazypattern}[3]{%
   {\bfseries #1}\par
-  {\fontsize{8.35}{9.7}\selectfont
+  {\fontsize{8.7}{10.12}\selectfont
   \textbf{Problem:} #2\par
   \textbf{Approach:} #3\par}\vspace{3pt}
 }
@@ -1239,7 +1629,7 @@ def query(l,r):
 
 \lazyhead{Configuration}
 
-{\fontsize{8.35}{9.7}\selectfont
+{\fontsize{8.7}{10.12}\selectfont
 Set \lazycode{MODE} to \lazycode{"SUM"},
 \lazycode{"MIN"}, or \lazycode{"MAX"} before
 \lazycode{build(a)}. Rebuilding resets all lazy tags.
@@ -1258,7 +1648,7 @@ MAX & \lazycode{max(x,y)} & $-\infty$\\
 
 \lazyhead{Update Rules}
 
-{\fontsize{8.35}{9.7}\selectfont
+{\fontsize{8.7}{10.12}\selectfont
 \begin{tabular}{@{}lll@{}}
 \hline
 \textbf{Mode} & \textbf{Add $x$} & \textbf{Set to $x$}\\
@@ -1342,13 +1732,139 @@ do not change it mid-operation.
 
 
 
+
+% ============================================================
+% NEW: LAZY SEGMENT TREE -- SOURCE-MATCHED MECHANICS AND EXAMPLES
+% Source: code/06_data_structures/Lazy_Segment_Tree.py (GitHub main)
+% ============================================================
+\clearpage
+\begingroup
+\lstset{basicstyle=\ttfamily\fontsize{9.5}{11.37}\selectfont,
+ commentstyle=\color{black},columns=fullflexible,breaklines=true,
+ breakatwhitespace=true,aboveskip=2pt,belowskip=2pt}
+\newcommand{\eghead}[1]{\par\vspace{5pt}\noindent
+ {\bfseries\fontsize{11}{13.12}\selectfont #1}\par\vspace{1pt}\hrule\vspace{3pt}}
+\newcommand{\egbody}[1]{\begingroup\raggedright
+ \fontsize{10.2}{12.57}\selectfont #1\par\endgroup}
+\newcommand{\egcode}[1]{{\ttfamily\fontsize{8.8}{10.47}\selectfont\detokenize{#1}}}
+\subsection{Lazy Segment Tree — Mechanics and Applications}
+{\small\textbf{Choose MODE = SUM/MIN/MAX before build().}
+ 0-based inclusive $[l,r]$. The core on the preceding page supports
+ $O(\log n)$ range ADD, SET, and queries. The examples below use fresh builds.}
+\par\vspace{5pt}
+\noindent
+\begin{minipage}[t]{0.493\textwidth}\vspace{0pt}
+\eghead{How Lazy Propagation Works}
+\egbody{\textbf{\egcode{tree[p]}} stores the result for the whole
+ segment at node $p$. \egcode{seg_len[p]} stores that segment's length.
+ \egcode{lazy_add[p]} is an addition postponed for children;
+ \egcode{lazy_set[p]} is a postponed assignment (\egcode{None}
+ means no pending SET, but $0$ is a valid SET).}
+\egbody{\textbf{\egcode{_set(p,x)}}: A whole segment becomes $x$.
+ SUM node becomes $x\times\text{length}$; MIN/MAX node becomes $x$.
+ Forget older pending ADD and remember the new SET.}
+\egbody{\textbf{\egcode{_add(p,x)}}: Increase an entire segment
+ by $x$. SUM increases by $x\times\text{length}$; MIN/MAX by $x$.
+ If SET was pending, add $x$ to that SET value; otherwise accumulate ADD.}
+\egbody{\textbf{\egcode{_push(p)}}: Pass pending SET to both children
+ first, then pending ADD; reset the tags on $p$. The children are now
+ safe to inspect or modify.}
+\egbody{\textbf{\egcode{_push_paths(L,R)}}: Push delayed changes
+ down the two split boundary paths before a query/update.
+ \textbf{\egcode{_pull_paths(L,R)}}: After the update, recompute
+ affected boundary ancestors without overwriting a fully-covered
+ node that already has its correct lazy aggregate.}
+\egbody{\textbf{\egcode{_apply(l,r,x,fn)}}: Convert inclusive
+ $[l,r]$ to internal half-open $[l+size,r+size+1)$; push boundary
+ paths, update covered nodes, then pull boundary ancestors.}
+
+\eghead{Order of Overlapping Updates}
+\begin{lstlisting}
+MODE = "SUM"
+build([1, 2, 3, 4])
+range_add(0, 3, 5)  # [6, 7, 8, 9]
+range_set(1, 2, 0)  # [6, 0, 0, 9]
+range_add(2, 3, 2)  # [6, 0, 2, 11]
+query(0, 3)        # 19
+\end{lstlisting}
+\egbody{\textbf{Rule:} Later SET overrides previous additions in
+ that interval. Later ADD increases the pending SET. That is why the
+ order of operations matters.}
+
+\eghead{Public Function Summary}
+\egbody{\egcode{build(a)} resets all arrays and tags; 
+ \egcode{range_add(l,r,x)} adds $x$ to every value; 
+ \egcode{range_set(l,r,x)} replaces every value by $x$; 
+ \egcode{query(l,r)} returns SUM/MIN/MAX; 
+ \egcode{add_value(i,x)} and \egcode{set_value(i,x)} are point versions.}
+\end{minipage}%
+\hfill\vrule width 0.3pt\hfill%
+\begin{minipage}[t]{0.475\textwidth}\vspace{0pt}\raggedright
+\eghead{1. Range ADD + Range SUM}
+\egbody{\textbf{Problem:} Add $x$ to each element in $[l,r]$ and ask
+ for the sum of a range. SUM mode; whole-segment sum changes by
+ $x\times\text{length}$.}
+\begin{lstlisting}
+MODE = "SUM"
+build([2, 4, 1, 5, 3])
+range_add(1, 3, 10)
+# [2, 14, 11, 15, 3]
+query(1, 3)  # 40
+query(0, 4)  # 45
+\end{lstlisting}
+
+\eghead{2. Range SET + Range SUM}
+\egbody{\textbf{Problem:} Replace every value in $[l,r]$ with $x$;
+ answer sum queries. A segment of length $k$ set to $x$ sums to $kx$.}
+\begin{lstlisting}
+MODE = "SUM"
+build([2, 4, 1, 5, 3])
+range_set(1, 3, 7)
+# [2, 7, 7, 7, 3]
+query(0, 4)  # 26
+\end{lstlisting}
+
+\eghead{3. Range ADD / SET + MIN / MAX}
+\egbody{\textbf{Problem:} Interval updates and min/max queries.
+ In MIN/MAX mode ADD increases that aggregate by $x$;
+ SET changes that aggregate to $x$.}
+\begin{lstlisting}
+MODE = "MIN"  # alternatively "MAX"
+build([8, 3, 5, 1, 6])
+range_add(1, 3, 4)
+# [8, 7, 9, 5, 6]
+query(0, 4)  # MIN: 5; MAX: 9
+range_set(2, 4, 2)
+# [8, 7, 2, 2, 2]
+query(0, 4)  # MIN: 2; MAX: 8
+\end{lstlisting}
+\egbody{For the MAX answers, change MODE to \egcode{"MAX"}
+ and call \egcode{build()} again before both updates.}
+
+\eghead{4. Overlapping ADD and SET}
+\egbody{\textbf{Problem:} Range assignments/additions overlap.
+ The same ADD/SET functions preserve chronological order of updates.
+ See the fully traced example at left.}
+
+\eghead{Important Limits}
+\egbody{\textbullet\ Only SUM/MIN/MAX modes and arithmetic ADD/SET
+ are supported; other operations require new lazy rules.\quad
+ \textbullet\ External indices must satisfy $0\le l\le r<n$.
+ Internally $R=r+size+1$.\quad
+ \textbullet\ Changing MODE requires
+ rebuilding.\quad \textbullet\ All operations above $O(\log n)$,
+ build and memory $O(n)$.\quad \textbullet\ Avoid treating
+ \egcode{lazy_set[p] == 0} as no pending assignment.}
+\end{minipage}
+\endgroup
+
 % ============================================================
 % PAGE 7: SEGMENT TREE SEARCH (ITERATIVE)
 % ============================================================
 \clearpage
 \begingroup
 \lstset{
-  basicstyle=\ttfamily\fontsize{6.9}{7.5}\selectfont,
+  basicstyle=\ttfamily\fontsize{7.8}{8.62}\selectfont,
   commentstyle=\color{black},
   columns=fullflexible,
   breaklines=false,
@@ -1358,15 +1874,15 @@ do not change it mid-operation.
 
 \newcommand{\searchhead}[1]{%
   \par\vspace{5pt}\noindent
-  {\bfseries\fontsize{9.2}{11}\selectfont #1}%
+  {\bfseries\fontsize{10.1}{12.22}\selectfont #1}%
   \par\vspace{1pt}\hrule\vspace{3pt}
 }
 \newcommand{\searchcode}[1]{%
-  {\ttfamily\fontsize{7.1}{8.3}\selectfont\detokenize{#1}}%
+  {\ttfamily\fontsize{7.95}{9.32}\selectfont\detokenize{#1}}%
 }
 \newcommand{\searchpattern}[3]{%
   {\bfseries #1}\par
-  {\fontsize{8.35}{9.7}\selectfont
+  {\fontsize{9.2}{10.72}\selectfont
   \textbf{Problem:} #2\par
   \textbf{Approach:} #3\par}\vspace{3pt}
 }
@@ -1475,7 +1991,7 @@ def kth(k):
 
 \searchhead{Configuration and Searches}
 
-{\fontsize{8.35}{9.7}\selectfont
+{\fontsize{9.2}{10.72}\selectfont
 Choose \searchcode{MODE} \emph{before} \searchcode{build(a)}.
 
 \par\vspace{2pt}
@@ -1573,5 +2089,124 @@ only point updates.
 
 \endgroup
 
+
+
+% ============================================================
+% NEW: SEGMENT TREE SEARCH -- SOURCE-MATCHED WORKED EXAMPLES
+% Source: code/06_data_structures/Segment_Tree_Search.py (GitHub main)
+% ============================================================
+\clearpage
+\begingroup
+\lstset{basicstyle=\ttfamily\fontsize{9.95}{11.82}\selectfont,
+ commentstyle=\color{black},columns=fullflexible,breaklines=true,
+ breakatwhitespace=true,aboveskip=2pt,belowskip=2pt}
+\newcommand{\eghead}[1]{\par\vspace{5pt}\noindent
+ {\bfseries\fontsize{11.3}{13.42}\selectfont #1}\par\vspace{1pt}\hrule\vspace{3pt}}
+\newcommand{\egbody}[1]{\begingroup\raggedright
+ \fontsize{10.6}{13.07}\selectfont #1\par\endgroup}
+\newcommand{\egcode}[1]{{\ttfamily\fontsize{9.3}{10.97}\selectfont\detokenize{#1}}}
+\subsection{Segment Tree Search — Worked Problem Patterns}
+{\small\textbf{Change MODE before build().} Each example below starts
+ with a fresh build. External indices are 0-based. Searches $O(\log n)$.
+ The code on the preceding page performs descent within the tree,
+ not binary search with repeated range queries.}
+\par\vspace{5pt}
+\noindent
+\begin{minipage}[t]{0.493\textwidth}\vspace{0pt}
+\eghead{1. First Element $\ge x$ (MAX Mode)}
+\egbody{\textbf{Problem:} On an \emph{unsorted} array with point
+ updates, find the first original index $i\ge start$ for which
+ \egcode{a[i]>=x}. If a node's maximum is $<x$, skip its whole
+ segment; otherwise descend to the leftmost valid leaf.}
+\begin{lstlisting}
+MODE = "MAX"
+build([2, 4, 1, 8, 3, 7])
+first_at_least(6)       # 3
+first_at_least(6, 4)    # 5
+set_value(3, 2)
+first_at_least(6)       # 5
+\end{lstlisting}
+\egbody{\textbf{Important:} No sorting needed. Searches are restricted
+ to original indices $i\ge start$. Returns $-1$ if absent.}
+
+\eghead{2. $k$-th Remaining Element (SUM Mode)}
+\egbody{\textbf{Problem:} Repeatedly remove the $k$-th remaining
+ element, printing original array values in original order.
+ Build \emph{active flags}: $1$ for present, $0$ for removed.
+ \egcode{kth(k)} returns the \emph{original 0-based position}.}
+\begin{lstlisting}
+MODE = "SUM"
+a = [2, 6, 1, 4, 2]
+removals = [3, 1, 3, 1, 1]
+build([1] * len(a))
+ans = []
+for k in removals:
+    pos = kth(k)
+    ans.append(a[pos])
+    set_value(pos, 0)
+print(ans)  # [1, 2, 2, 6, 4]
+\end{lstlisting}
+\egbody{\textbf{Difference from Fenwick:} This segment tree
+ returns 0-based positions; the Fenwick \egcode{kth(k)}
+ returns a 1-based BIT index. No removal from the actual \egcode{a} list.}
+
+\eghead{How the Two Modes Differ}
+\egbody{\textbf{MAX} stores segment maxima and supports
+ \egcode{first_at_least(x,start)}. \textbf{SUM} stores non-negative
+ sums/frequencies and supports \egcode{prefix_lower_bound(target)}
+ and \egcode{kth(k)}. Changing MODE requires another build.}
+\end{minipage}%
+\hfill\vrule width 0.3pt\hfill%
+\begin{minipage}[t]{0.475\textwidth}\vspace{0pt}\raggedright
+\eghead{3. First Prefix Sum $\ge x$ (SUM Mode)}
+\egbody{\textbf{Problem:} Find the first index $i$ with
+ $a_0+\cdots+a_i\ge x$. All values must be \emph{non-negative}
+ so prefix sums are nondecreasing. To descend: if the left
+ child's sum reaches the target, go left; otherwise subtract
+ that sum and go right.}
+\begin{lstlisting}
+MODE = "SUM"
+build([2, 0, 3, 1])
+# Prefix sums: [2, 2, 5, 6]
+prefix_lower_bound(1)  # 0
+prefix_lower_bound(3)  # 2
+prefix_lower_bound(5)  # 2
+prefix_lower_bound(6)  # 3
+prefix_lower_bound(7)  # -1
+\end{lstlisting}
+\egbody{This implementation returns $-1$ when
+ \egcode{target<=0} or the target is beyond the total sum.}
+
+\eghead{4. $k$-th Smallest in a Multiset (SUM Mode)}
+\egbody{\textbf{Problem:} Insert/delete integer values (duplicates
+ allowed) and find the $k$-th smallest occurrence. Here leaf index
+ = \emph{value}; leaf value = \emph{frequency}. Therefore
+ \egcode{kth(k)} gives a value index, not a position in the
+ original input list.}
+\begin{lstlisting}
+MODE = "SUM"
+# Allowed values: 0,1,2,3,4
+build([0, 2, 1, 0, 3])
+# Values: [1, 1, 2, 4, 4, 4]
+kth(1)  # 1
+kth(3)  # 2
+kth(4)  # 4
+add_value(2, -1)  # remove one 2
+kth(3)  # 4
+\end{lstlisting}
+\egbody{\textbf{Requirements:} Non-negative integer frequencies;
+ never remove an absent value. Large/negative value domains may
+ need coordinate compression and mapping back to real values.}
+
+\eghead{Search Safety Notes}
+\egbody{\textbullet\ $k$ is 1-based, returned index is 0-based;
+ $-1$ means invalid/not found.\quad
+ \textbullet\ Prefix lower bound requires all numbers $\ge0$;
+ $k$-th requires non-negative integer counts.\quad
+ \textbullet\ Only point updates: use Lazy Segment Tree
+ for interval updates.\quad
+ \textbullet\ \egcode{query(l,r)} is SUM or MAX over inclusive indices.}
+\end{minipage}
+\endgroup
 
 \end{document}
