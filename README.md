@@ -1,6 +1,6 @@
 # ICPC Python Reference
 
-This repository contains only the algorithms and formulas currently used in my ICPC template.
+This repository contains only the algorithms and formulas currently used in my ICPC template. Compile the template.tex in overleaf or any other .tex compiler to generate the pdf. A version of the latest pdf can be found in releases.
 
 ## Layout
 
