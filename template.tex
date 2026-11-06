@@ -73,9 +73,9 @@
 % First reference chapters: larger print, natural page-flow.
 \begingroup
 \titleformat{\section}{\fontsize{11.8}{13.9}\selectfont\bfseries}{}{0pt}{}[\vspace{-1pt}\hrule]
-\titleformat{\subsection}{\fontsize{10.5}{12.5}\selectfont\bfseries}{}{0pt}{}
+\titleformat{\subsection}{\fontsize{11.5}{13.5}\selectfont\bfseries\raggedright}{}{0pt}{}
 \titlespacing*{\section}{0pt}{5pt}{3pt}
-\titlespacing*{\subsection}{0pt}{3pt}{2pt}
+\titlespacing*{\subsection}{0pt}{8pt}{4pt}
 \lstset{basicstyle=\ttfamily\fontsize{8.9}{10.8}\selectfont,
         columns=fullflexible,breaklines=true,breakatwhitespace=true,
         aboveskip=2pt,belowskip=2pt}
@@ -157,6 +157,7 @@ a.sort(key=lambda x: (x[0], -x[1]))
 break ties in order. Sorting fixed-size tuples costs
 $O(n\log n)$.
 
+\par\noindent\begin{minipage}[t]{\linewidth}
 \subsection{Float Array Formatting --- Two Decimal Places}
 \begin{lstlisting}
 a = [10.25412, 4.1545, 1.15151]
@@ -178,7 +179,7 @@ formatted = [f"{x:.2f}" for x in a]
 \textbf{Note:} Formatting produces strings rather than
 rounded float values and retains trailing zeros
 (e.g., \code{2.50}).
-
+\end{minipage}\par
 % ============================================================
 \section{Common Contest Terminology}
 
@@ -512,7 +513,11 @@ def sieve_bytearray(N):
 
 N = 10**6 + 7
 a = sieve_bytearray(N)
+\end{lstlisting}
 
+\par\noindent\begin{minipage}[t]{\linewidth}
+\textbf{Fast primality lookup (after sieve build):}
+\begin{lstlisting}
 def is_prime_fast(x):
     if x == 2:
         return True
@@ -520,7 +525,9 @@ def is_prime_fast(x):
         return False
     return bool(a[x // 2])
 \end{lstlisting}
+\end{minipage}\par
 
+\par\noindent\begin{minipage}[t]{\linewidth}
 \subsection{Compact Prime List from Odd Sieve}
 \begin{lstlisting}
 from array import array
@@ -530,7 +537,7 @@ for i in range(1, len(a)):
     if a[i]:
         primes.append(2 * i + 1)
 \end{lstlisting}
-
+\end{minipage}\par
 \subsection{Smallest Prime Factor (SPF) --- Many Queries}
 Preprocess once; each factorization takes $O(\log n)$ factors with multiplicity.
 \begin{lstlisting}
@@ -667,6 +674,7 @@ C = degrees(acos((BC*BC + CA*CA - AB*AB)
 \end{lstlisting}
 Clamp the cosine to $[-1,1]$ if floating-point error is possible.
 
+\par\noindent\begin{minipage}[t]{\linewidth}
 \subsection{Polygon Area --- Shoelace Formula}
 \begin{lstlisting}
 def polygon_area2(points):
@@ -682,7 +690,7 @@ def polygon_area2(points):
 
 # area = polygon_area2(points) / 2
 \end{lstlisting}
-
+\end{minipage}\par
 % ============================================================
 \section{Graph Algorithms}
 
@@ -734,6 +742,7 @@ def is_bipartite(n, graph):
 \end{lstlisting}
 Bipartite iff no odd-length cycle. Every tree is bipartite. Checks disconnected graphs and rejects self-loops.
 
+\par\noindent\begin{minipage}[t]{\linewidth}
 \subsection{General Iterative DFS}
 For a 1-indexed graph, return DFS order, parent and depth from a start
 vertex. Works on directed or undirected adjacency lists; unreachable
@@ -757,6 +766,9 @@ def dfs(n, graph, start=1):
                 st.append((v, u, d+1))
     return order, par, dep
 \end{lstlisting}
+\end{minipage}\par
+
+\noindent\begin{minipage}[t]{\linewidth}
 \textbf{Undirected connected components:}
 \begin{lstlisting}
 def connected_components(n, graph):
@@ -780,6 +792,7 @@ def connected_components(n, graph):
 # len(connected_components(n, graph))
 \end{lstlisting}
 For directed graphs, this is \emph{not} an SCC algorithm.
+\end{minipage}\par
 
 \subsection{Iterative DFS with Traversal Depth}
 For a tree this is depth from \code{start}; in a general graph it is DFS-tree depth.
@@ -798,8 +811,9 @@ def dfs_max_depth(start, graph):
     return best
 \end{lstlisting}
 
+\par\noindent\begin{minipage}[t]{\linewidth}
 \subsection{Grid BFS / DFS --- Four Directions}
-Coordinates are 0-based; walls are \code{'#'}, other cells
+Coordinates are 0-based; walls are \texttt{'\#'}, other cells
 passable. BFS finds shortest unweighted distances; DFS flood-fills
 an open region. Each traversal is $O(RC)$.
 \begin{lstlisting}
@@ -835,7 +849,12 @@ def grid_path(par, sr, sc, tr, tc):
         r, c = cur
         cur = par[r][c]
     return []
+\end{lstlisting}
+\end{minipage}\par
 
+\noindent\begin{minipage}[t]{\linewidth}
+\textbf{Grid DFS and Room Counting (continued)}\par
+\begin{lstlisting}
 def grid_dfs(grid, sr, sc, seen):
     n, m = len(grid), len(grid[0])
     if grid[sr][sc] == '#' or seen[sr][sc]:
@@ -861,10 +880,16 @@ def count_rooms(grid):
                for r in range(n)
                for c in range(m))
 \end{lstlisting}
-\textbf{Example:} \code{grid = ["..#.",".##.","...#"]}.
-\code{grid_bfs(grid,0,0)[0][2][2] == 4};
-\code{count_rooms(grid) == 2}. Add diagonals to \code{DIRS}
-only if the problem permits eight-direction movement.
+\textbf{Grid example:}
+\begin{lstlisting}
+grid = ["..#.", ".##.", "...#"]
+dist, parent = grid_bfs(grid, 0, 0)
+print(dist[2][2])    # 4
+print(count_rooms(grid))  # 2
+\end{lstlisting}
+Add diagonals to \code{DIRS} only if the problem permits
+8-direction movement.
+\end{minipage}\par
 
 \subsection{Binary Tree Inorder Traversal}
 \begin{lstlisting}
@@ -881,6 +906,7 @@ def inorder(tree, root):
     return ans
 \end{lstlisting}
 
+\par\noindent\begin{minipage}[t]{\linewidth}
 \subsection{N-ary Tree Preorder \& Postorder}
 \begin{lstlisting}
 def dfs_orders(tree, root):
@@ -898,6 +924,7 @@ def dfs_orders(tree, root):
             post.append(u)
     return pre, post
 \end{lstlisting}
+\end{minipage}\par
 
 \subsection{Dijkstra --- Non-negative Edge Weights}
 Adjacency list: \code{graph[u] = [(v,w), ...]}.
@@ -934,6 +961,7 @@ def restore_path(par, src, target):
     return []
 \end{lstlisting}
 
+\par\noindent\begin{minipage}[t]{\linewidth}
 \subsection{Topological Sort --- Kahn's Algorithm}
 \begin{lstlisting}
 from collections import deque
@@ -958,11 +986,14 @@ def topo_sort(graph, n):
     # [] means a directed cycle exists.
     return order if len(order) == n else []
 \end{lstlisting}
+\end{minipage}\par
 
-\subsection{Kruskal MST --- Sort Edges + DSU}
+\par\noindent\begin{minipage}[t]{\linewidth}
+\subsection{Kruskal's Minimum Spanning Tree}
 For an \textbf{undirected weighted} graph with 1-based vertices,
-input edges as \code{(u,v,w)}. Sort by weight, take edges joining
-different components. $O(E\log E)$; negative weights are valid.
+input edges as \code{(u,v,w)}. \textbf{Method:} sort edges
+by weight, joining distinct components using DSU.
+$O(E\log E)$ time; negative weights are valid.
 \begin{lstlisting}
 def kruskal(n, edges):
     par = list(range(n+1))
@@ -995,12 +1026,14 @@ edges = [(1,2,4),(1,3,1),(2,3,2),
          (2,4,3),(3,4,7)]
 print(kruskal(4, edges)[0])  # 6
 \end{lstlisting}
-Returns \code{(None, forest_edges)} if disconnected.
-An MST uses exactly $n-1$ edges. Distinct from Dijkstra
-(shortest paths from a source).
-
+\textbf{Disconnected graph:} returns \code{None} as the
+MST cost, plus the chosen spanning-forest edges.
+\textbf{Reminder:} An MST has exactly $n-1$ edges.
+Kruskal builds an MST; Dijkstra finds shortest paths.
+\end{minipage}\par
 
 % ============================================================
+\par\noindent\begin{minipage}[t]{\linewidth}
 \section{Data Structures}
 
 \subsection{DSU / Union--Find}
@@ -1034,6 +1067,7 @@ def union(u, v):
 # Components after all unions:
 # len({find(i) for i in range(1, n + 1)})
 \end{lstlisting}
+\end{minipage}\par
 
 % ============================================================
 % FENWICK TREE — EXPANDED, SOURCE-MATCHED REFERENCE
