@@ -685,6 +685,53 @@ def is_bipartite(n, graph):
 \end{lstlisting}
 Bipartite iff no odd-length cycle. Every tree is bipartite. Checks disconnected graphs and rejects self-loops.
 
+\subsection{General Iterative DFS}
+For a 1-indexed graph, return DFS order, parent and depth from a start
+vertex. Works on directed or undirected adjacency lists; unreachable
+vertices keep depth $-1$. $O(V+E)$.
+\begin{lstlisting}
+def dfs(n, graph, start=1):
+    seen = [False] * (n+1)
+    par = [-1] * (n+1)
+    dep = [-1] * (n+1)
+    order = []
+    st = [(start, -1, 0)]
+    while st:
+        u, p, d = st.pop()
+        if seen[u]:
+            continue
+        seen[u] = True
+        par[u], dep[u] = p, d
+        order.append(u)
+        for v in reversed(graph[u]):
+            if not seen[v]:
+                st.append((v, u, d+1))
+    return order, par, dep
+\end{lstlisting}
+\textbf{Undirected connected components:}
+\begin{lstlisting}
+def connected_components(n, graph):
+    seen = [False] * (n+1)
+    comps = []
+    for s in range(1, n+1):
+        if seen[s]:
+            continue
+        seen[s] = True
+        st, comp = [s], []
+        while st:
+            u = st.pop()
+            comp.append(u)
+            for v in graph[u]:
+                if not seen[v]:
+                    seen[v] = True
+                    st.append(v)
+        comps.append(comp)
+    return comps
+
+# len(connected_components(n, graph))
+\end{lstlisting}
+For directed graphs, this is \emph{not} an SCC algorithm.
+
 \subsection{Iterative DFS with Traversal Depth}
 For a tree this is depth from \code{start}; in a general graph it is DFS-tree depth.
 \begin{lstlisting}
@@ -701,6 +748,74 @@ def dfs_max_depth(start, graph):
                 stack.append((v, dep + 1))
     return best
 \end{lstlisting}
+
+\subsection{Grid BFS / DFS --- Four Directions}
+Coordinates are 0-based; walls are \code{'#'}, other cells
+passable. BFS finds shortest unweighted distances; DFS flood-fills
+an open region. Each traversal is $O(RC)$.
+\begin{lstlisting}
+from collections import deque
+DIRS = ((1,0),(-1,0),(0,1),(0,-1))
+
+def grid_bfs(grid, sr, sc):
+    n, m = len(grid), len(grid[0])
+    dist = [[-1]*m for _ in range(n)]
+    par = [[None]*m for _ in range(n)]
+    if grid[sr][sc] == '#':
+        return dist, par
+    dist[sr][sc] = 0
+    q = deque([(sr, sc)])
+    while q:
+        r, c = q.popleft()
+        for dr, dc in DIRS:
+            nr, nc = r+dr, c+dc
+            if (0 <= nr < n and 0 <= nc < m
+                and grid[nr][nc] != '#'
+                and dist[nr][nc] == -1):
+                dist[nr][nc] = dist[r][c]+1
+                par[nr][nc] = (r, c)
+                q.append((nr, nc))
+    return dist, par
+
+def grid_path(par, sr, sc, tr, tc):
+    path, cur = [], (tr, tc)
+    while cur is not None:
+        path.append(cur)
+        if cur == (sr, sc):
+            return path[::-1]
+        r, c = cur
+        cur = par[r][c]
+    return []
+
+def grid_dfs(grid, sr, sc, seen):
+    n, m = len(grid), len(grid[0])
+    if grid[sr][sc] == '#' or seen[sr][sc]:
+        return 0
+    seen[sr][sc] = True
+    st, cnt = [(sr, sc)], 0
+    while st:
+        r, c = st.pop()
+        cnt += 1
+        for dr, dc in DIRS:
+            nr, nc = r+dr, c+dc
+            if (0 <= nr < n and 0 <= nc < m
+                and grid[nr][nc] != '#'
+                and not seen[nr][nc]):
+                seen[nr][nc] = True
+                st.append((nr, nc))
+    return cnt
+
+def count_rooms(grid):
+    n, m = len(grid), len(grid[0])
+    seen = [[False]*m for _ in range(n)]
+    return sum(bool(grid_dfs(grid,r,c,seen))
+               for r in range(n)
+               for c in range(m))
+\end{lstlisting}
+\textbf{Example:} \code{grid = ["..#.",".##.","...#"]}.
+\code{grid_bfs(grid,0,0)[0][2][2] == 4};
+\code{count_rooms(grid) == 2}. Add diagonals to \code{DIRS}
+only if the problem permits eight-direction movement.
 
 \subsection{Binary Tree Inorder Traversal}
 \begin{lstlisting}
@@ -794,6 +909,47 @@ def topo_sort(graph, n):
     # [] means a directed cycle exists.
     return order if len(order) == n else []
 \end{lstlisting}
+
+\subsection{Kruskal MST --- Sort Edges + DSU}
+For an \textbf{undirected weighted} graph with 1-based vertices,
+input edges as \code{(u,v,w)}. Sort by weight, take edges joining
+different components. $O(E\log E)$; negative weights are valid.
+\begin{lstlisting}
+def kruskal(n, edges):
+    par = list(range(n+1))
+    sz = [1]*(n+1)
+    def find(u):
+        while par[u] != u:
+            par[u] = par[par[u]]
+            u = par[u]
+        return u
+
+    cost, chosen = 0, []
+    for u,v,w in sorted(edges,
+                         key=lambda e:e[2]):
+        a,b = find(u), find(v)
+        if a == b:
+            continue
+        if sz[a] < sz[b]:
+            a,b = b,a
+        par[b] = a
+        sz[a] += sz[b]
+        cost += w
+        chosen.append((u,v,w))
+        if len(chosen) == n-1:
+            break
+    if len(chosen) != n-1:
+        return None, chosen
+    return cost, chosen
+
+edges = [(1,2,4),(1,3,1),(2,3,2),
+         (2,4,3),(3,4,7)]
+print(kruskal(4, edges)[0])  # 6
+\end{lstlisting}
+Returns \code{(None, forest_edges)} if disconnected.
+An MST uses exactly $n-1$ edges. Distinct from Dijkstra
+(shortest paths from a source).
+
 
 % ============================================================
 \section{Data Structures}
